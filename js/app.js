@@ -4,16 +4,8 @@
 // Global State
 // ----------------------------
 const state = {
-  lang: "en",
-  currentTab: "basic"
+  lang: "en"
 };
-
-// ----------------------------
-// Tabs
-// ----------------------------
-const tabs = [
-  { id: "basic", en: "Basic Exercises", kn: "ಮೂಲ ಅಭ್ಯಾಸಗಳು" }
-];
 
 // ----------------------------
 // Swaras (Mayamalavagowla)
@@ -92,6 +84,36 @@ function applyTala(groups) {
 }
 
 // ----------------------------
+// Combined Speed Block
+// ----------------------------
+function renderCombinedSpeed(label, aro, ava) {
+  const aroLabel = t("Arohana");
+  const avaLabel = t("Avarohana");
+
+  return `
+    <div>
+
+      <div class="text-lg font-semibold mb-2">${label}</div>
+
+      <div class="space-y-3 text-blue-700">
+
+        <div>
+          <div class="text-gray-500 text-sm">${aroLabel}</div>
+          <pre class="bg-gray-50 p-3 rounded font-mono overflow-x-auto">${aro}</pre>
+        </div>
+
+        <div>
+          <div class="text-gray-500 text-sm">${avaLabel}</div>
+          <pre class="bg-gray-50 p-3 rounded font-mono overflow-x-auto">${ava}</pre>
+        </div>
+
+      </div>
+
+    </div>
+  `;
+}
+
+// ----------------------------
 // Render Raga
 // ----------------------------
 function renderRaga() {
@@ -105,45 +127,9 @@ function renderRaga() {
 
       <div class="text-2xl font-bold">${r.name}</div>
 
-      <!-- AROHANA -->
-      <div>
-        <div class="font-semibold mb-2">${t("Arohana")}</div>
-
-        ${renderSpeedBlock(aroSpeeds)}
-      </div>
-
-      <!-- AVAROHANA -->
-      <div>
-        <div class="font-semibold mb-2">${t("Avarohana")}</div>
-
-        ${renderSpeedBlock(avaSpeeds)}
-      </div>
-
-    </div>
-  `;
-}
-
-// ----------------------------
-// Speed Block UI
-// ----------------------------
-function renderSpeedBlock(speeds) {
-  return `
-    <div class="space-y-3 text-blue-700">
-
-      <div>
-        <div class="text-sm text-gray-500">${t("Speed 1")}</div>
-        <pre class="bg-gray-50 p-3 rounded font-mono">${speeds.speed1}</pre>
-      </div>
-
-      <div>
-        <div class="text-sm text-gray-500">${t("Speed 2")}</div>
-        <pre class="bg-gray-50 p-3 rounded font-mono">${speeds.speed2}</pre>
-      </div>
-
-      <div>
-        <div class="text-sm text-gray-500">${t("Speed 3")}</div>
-        <pre class="bg-gray-50 p-3 rounded font-mono">${speeds.speed3}</pre>
-      </div>
+      ${renderCombinedSpeed(t("Speed 1"), aroSpeeds.speed1, avaSpeeds.speed1)}
+      ${renderCombinedSpeed(t("Speed 2"), aroSpeeds.speed2, avaSpeeds.speed2)}
+      ${renderCombinedSpeed(t("Speed 3"), aroSpeeds.speed3, avaSpeeds.speed3)}
 
     </div>
   `;
@@ -158,23 +144,6 @@ function renderContent() {
 }
 
 // ----------------------------
-// Tabs
-// ----------------------------
-function initTabs() {
-  const nav = document.getElementById("tabs");
-  nav.innerHTML = "";
-
-  tabs.forEach(tab => {
-    const btn = document.createElement("button");
-
-    btn.textContent = tab[state.lang];
-    btn.className = "px-4 py-2 rounded bg-blue-500 text-white";
-
-    nav.appendChild(btn);
-  });
-}
-
-// ----------------------------
 // Language Switch
 // ----------------------------
 function setLanguage(lang) {
@@ -184,7 +153,6 @@ function setLanguage(lang) {
     lang === "en" ? "Carnatic Learning" : "ಕಾರ್ನಾಟಿಕ್ ಲರ್ನಿಂಗ್";
 
   renderContent();
-  initTabs();
 }
 
 // ----------------------------
@@ -194,6 +162,5 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-en").onclick = () => setLanguage("en");
   document.getElementById("btn-kn").onclick = () => setLanguage("kn");
 
-  initTabs();
   renderContent();
 });

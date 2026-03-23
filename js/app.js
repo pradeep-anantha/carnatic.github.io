@@ -9,7 +9,7 @@ const state = {
 };
 
 // ----------------------------
-// Tabs Configuration
+// Tabs
 // ----------------------------
 const tabs = [
   { id: "basic", en: "Basic Exercises", kn: "ಮೂಲ ಅಭ್ಯಾಸಗಳು" },
@@ -23,15 +23,15 @@ const tabs = [
 ];
 
 // ----------------------------
-// Swaras (Mayamalavagowla)
+// Swaras (Correct Notation)
 // ----------------------------
 const SWARAS = {
-  en: ["S", "R1", "G3", "M1", "P", "D1", "N3", "S"],
+  en: ["S", "R₁", "G₃", "M₁", "P", "D₁", "N₃", "S"],
   kn: ["ಸ", "ರಿ₁", "ಗ₃", "ಮ₁", "ಪ", "ಧ₁", "ನಿ₃", "ಸ"]
 };
 
 // ----------------------------
-// Translation Helper
+// Translation
 // ----------------------------
 function t(key) {
   const dict = {
@@ -48,88 +48,147 @@ function t(key) {
 }
 
 // ----------------------------
-// Sarali Varisai Generator
+// Sarali Varisai (Structured)
 // ----------------------------
-function generateSaraliExercises() {
-  const sw = SWARAS[state.lang];
+function getSaraliExercises() {
+  const s = SWARAS[state.lang];
 
   return [
-    [sw[0], sw[1], sw[2], sw[3], sw[4], sw[5], sw[6], sw[7]],
-    [sw[1], sw[2], sw[3], sw[4], sw[5], sw[6], sw[7], sw[0]],
-    [sw[2], sw[3], sw[4], sw[5], sw[6], sw[7], sw[0], sw[1]],
-    [sw[3], sw[4], sw[5], sw[6], sw[7], sw[0], sw[1], sw[2]],
-    [sw[4], sw[5], sw[6], sw[7], sw[0], sw[1], sw[2], sw[3]],
-    [sw[5], sw[6], sw[7], sw[0], sw[1], sw[2], sw[3], sw[4]],
-    [sw[6], sw[7], sw[0], sw[1], sw[2], sw[3], sw[4], sw[5]]
+    [[s[0], s[1], s[2], s[3]], [s[4], s[5], s[6], s[7]]],
+
+    [
+      [s[0], s[1], s[2], s[3]],
+      [s[1], s[2], s[3], s[4]],
+      [s[2], s[3], s[4], s[5]],
+      [s[3], s[4], s[5], s[6]],
+      [s[4], s[5], s[6], s[7]]
+    ],
+
+    [
+      [s[0], s[1], s[0], s[1]],
+      [s[1], s[2], s[1], s[2]],
+      [s[2], s[3], s[2], s[3]],
+      [s[3], s[4], s[3], s[4]],
+      [s[4], s[5], s[4], s[5]],
+      [s[5], s[6], s[5], s[6]],
+      [s[6], s[7], s[6], s[7]]
+    ],
+
+    [
+      [s[0], s[1], s[2], s[3], s[0], s[1], s[2], s[3]],
+      [s[4], s[5], s[6], s[7]],
+      [s[7], s[6], s[5], s[4]],
+      [s[3], s[2], s[1], s[0]]
+    ],
+
+    [
+      [s[0], s[2], s[1], s[3]],
+      [s[1], s[3], s[2], s[4]],
+      [s[2], s[4], s[3], s[5]],
+      [s[3], s[5], s[4], s[6]],
+      [s[4], s[6], s[5], s[7]]
+    ],
+
+    [
+      [s[0], s[1], s[2], s[1]],
+      [s[1], s[2], s[3], s[2]],
+      [s[2], s[3], s[4], s[3]],
+      [s[3], s[4], s[5], s[4]],
+      [s[4], s[5], s[6], s[5]],
+      [s[5], s[6], s[7], s[6]]
+    ],
+
+    [
+      [s[0], s[1], s[2], s[3]],
+      [s[3], s[2], s[1], s[0]],
+      [s[1], s[2], s[3], s[4]],
+      [s[4], s[3], s[2], s[1]],
+      [s[2], s[3], s[4], s[5]],
+      [s[5], s[4], s[3], s[2]]
+    ]
   ];
 }
 
 // ----------------------------
-// Speed Generator
+// Tala Formatting (Aligned)
 // ----------------------------
-function generateSpeeds(pattern) {
+function formatAdiTala(arr) {
+  let lines = [];
+
+  for (let i = 0; i < arr.length; i += 8) {
+    const av = arr.slice(i, i + 8);
+
+    const laghu = pad(av.slice(0, 4));
+    const d1 = pad(av.slice(4, 6));
+    const d2 = pad(av.slice(6, 8));
+
+    lines.push(`${laghu} | ${d1} | ${d2} ||`);
+  }
+
+  return lines.join("\n");
+}
+
+function pad(notes) {
+  return notes.join(" ").padEnd(22, " ");
+}
+
+// ----------------------------
+// Speed Rendering
+// ----------------------------
+function renderSpeed(lines, repeat) {
+  let output = [];
+
+  lines.forEach(line => {
+    let expanded = [];
+    for (let i = 0; i < repeat; i++) {
+      expanded = expanded.concat(line);
+    }
+    output.push(formatAdiTala(expanded));
+  });
+
+  return output.join("\n");
+}
+
+function generateSpeeds(lines) {
   return {
-    speed1: formatSpeed(pattern, 1),
-    speed2: formatSpeed(pattern, 2),
-    speed3: formatSpeed(pattern, 4)
+    speed1: renderSpeed(lines, 1),
+    speed2: renderSpeed(lines, 2),
+    speed3: renderSpeed(lines, 4)
   };
 }
 
-function formatSpeed(pattern, notesPerBeat) {
-  let output = [];
-
-  for (let i = 0; i < pattern.length; i += notesPerBeat) {
-    const group = pattern.slice(i, i + notesPerBeat);
-    output.push(group.join(" "));
-  }
-
-  return output.join("   ");
-}
-
 // ----------------------------
-// Exercise Section Renderer
+// Render Exercises
 // ----------------------------
-function exerciseSection(enTitle, knTitle, type) {
-  let html = `
-    <div class="mb-8">
-      <h2 class="text-xl font-bold mb-4">
-        ${state.lang === "en" ? enTitle : knTitle}
-      </h2>
-  `;
+function renderSarali() {
+  const exercises = getSaraliExercises();
+  let html = `<div class="mb-8"><h2 class="text-xl font-bold mb-4">Sarali Varisai</h2>`;
 
-  let exercises = [];
-
-  if (type === "sarali") {
-    exercises = generateSaraliExercises();
-  } else {
-    exercises = Array(7).fill(["..."]);
-  }
-
-  exercises.forEach((pattern, index) => {
-    const speeds = generateSpeeds(pattern);
+  exercises.forEach((lines, i) => {
+    const speeds = generateSpeeds(lines);
 
     html += `
-      <div class="bg-white p-4 mb-4 rounded-lg shadow-sm border">
-        
-        <div class="font-semibold text-md mb-2">
-          ${t("Exercise")} ${index + 1}
+      <div class="bg-white p-4 mb-6 rounded-lg shadow border">
+
+        <div class="font-bold mb-3">
+          ${t("Exercise")} ${i + 1}
         </div>
 
-        <div class="space-y-3 font-mono text-lg text-blue-700 leading-relaxed">
+        <div class="space-y-4 text-blue-700">
 
           <div>
-            <span class="text-gray-500 text-sm">${t("Speed 1")}:</span><br/>
-            ${speeds.speed1}
+            <div class="text-gray-500 text-sm">${t("Speed 1")}</div>
+            <pre class="bg-gray-50 p-3 rounded font-mono">${speeds.speed1}</pre>
           </div>
 
           <div>
-            <span class="text-gray-500 text-sm">${t("Speed 2")}:</span><br/>
-            ${speeds.speed2}
+            <div class="text-gray-500 text-sm">${t("Speed 2")}</div>
+            <pre class="bg-gray-50 p-3 rounded font-mono">${speeds.speed2}</pre>
           </div>
 
           <div>
-            <span class="text-gray-500 text-sm">${t("Speed 3")}:</span><br/>
-            ${speeds.speed3}
+            <div class="text-gray-500 text-sm">${t("Speed 3")}</div>
+            <pre class="bg-gray-50 p-3 rounded font-mono">${speeds.speed3}</pre>
           </div>
 
         </div>
@@ -143,63 +202,47 @@ function exerciseSection(enTitle, knTitle, type) {
 }
 
 // ----------------------------
-// Render Content
+// Main Render
 // ----------------------------
 function renderContent() {
   const content = document.getElementById("content");
 
   if (state.currentTab === "basic") {
-    content.innerHTML =
-      exerciseSection("Sarali Varisai", "ಸರಳಿ ವರಿಸೈ", "sarali") +
-      exerciseSection("Jantai Varisai", "ಜಂಟೈ ವರಿಸೈ", "jantai") +
-      exerciseSection("Dhatu Varisai", "ಧಾಟು ವರಿಸೈ", "dhatu") +
-      exerciseSection("Alankara", "ಅಲಂಕಾರ", "alankara");
+    content.innerHTML = renderSarali();
   } else {
-    content.innerHTML = `
-      <div class="p-4 bg-white rounded shadow">
-        ${t("Content will be added here")}
-      </div>
-    `;
+    content.innerHTML = `<div class="p-4 bg-white rounded shadow">${t("Content will be added here")}</div>`;
   }
 }
 
 // ----------------------------
-// Tabs Initialization
+// Tabs
 // ----------------------------
 function initTabs() {
-  const tabContainer = document.getElementById("tabs");
-  tabContainer.innerHTML = "";
+  const nav = document.getElementById("tabs");
+  nav.innerHTML = "";
 
   tabs.forEach(tab => {
     const btn = document.createElement("button");
 
     btn.textContent = tab[state.lang];
+    btn.className = `px-4 py-2 rounded ${
+      state.currentTab === tab.id
+        ? "bg-blue-500 text-white"
+        : "bg-gray-200"
+    }`;
 
-    btn.className = `
-      px-4 py-2 rounded-md text-sm font-medium
-      ${
-        state.currentTab === tab.id
-          ? "bg-blue-500 text-white"
-          : "bg-gray-200 hover:bg-gray-300"
-      }
-    `;
+    btn.onclick = () => {
+      state.currentTab = tab.id;
+      renderContent();
+      initTabs();
+    };
 
-    btn.addEventListener("click", () => loadTab(tab.id));
-    tabContainer.appendChild(btn);
+    nav.appendChild(btn);
   });
 }
 
 // ----------------------------
-// Tab Switch
-// ----------------------------
-function loadTab(tabId) {
-  state.currentTab = tabId;
-  renderContent();
-  initTabs();
-}
-
-// ----------------------------
-// Language Switch
+// Language
 // ----------------------------
 function setLanguage(lang) {
   state.lang = lang;
@@ -207,29 +250,16 @@ function setLanguage(lang) {
   document.getElementById("title").textContent =
     lang === "en" ? "Carnatic Learning" : "ಕಾರ್ನಾಟಿಕ್ ಲರ್ನಿಂಗ್";
 
-  document.getElementById("btn-en").className =
-    lang === "en"
-      ? "px-3 py-1 rounded bg-white text-blue-600 font-semibold"
-      : "px-3 py-1 rounded bg-blue-500 text-white";
-
-  document.getElementById("btn-kn").className =
-    lang === "kn"
-      ? "px-3 py-1 rounded bg-white text-blue-600 font-semibold"
-      : "px-3 py-1 rounded bg-blue-500 text-white";
-
   initTabs();
   renderContent();
 }
 
 // ----------------------------
-// Init App (FIXED)
+// Init
 // ----------------------------
 document.addEventListener("DOMContentLoaded", () => {
-  const btnEn = document.getElementById("btn-en");
-  const btnKn = document.getElementById("btn-kn");
-
-  if (btnEn) btnEn.addEventListener("click", () => setLanguage("en"));
-  if (btnKn) btnKn.addEventListener("click", () => setLanguage("kn"));
+  document.getElementById("btn-en").onclick = () => setLanguage("en");
+  document.getElementById("btn-kn").onclick = () => setLanguage("kn");
 
   initTabs();
   renderContent();

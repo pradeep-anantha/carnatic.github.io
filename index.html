@@ -1,33 +1,33 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Carnatic Learning App</title>
+  <title>Carnatic Learning</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="bg-gray-100 text-gray-900">
 
-<body class="bg-gray-900 text-white min-h-screen">
+  <!-- Header -->
+  <header class="bg-blue-600 text-white p-4 flex justify-between items-center">
+    <h1 id="title" class="text-xl font-bold">Carnatic Learning</h1>
 
-<!-- HEADER -->
-<header class="flex justify-between items-center p-4 border-b border-gray-700 bg-black">
-  <h1 id="title" class="text-xl font-bold">Carnatic Learning</h1>
+    <!-- Language Toggle -->
+    <div class="space-x-2">
+      <button id="btn-en" class="px-3 py-1 rounded bg-white text-blue-600 font-semibold">English</button>
+      <button id="btn-kn" class="px-3 py-1 rounded bg-blue-500 text-white">ಕನ್ನಡ</button>
+    </div>
+  </header>
 
-  <div class="flex gap-2">
-    <button onclick="setLanguage('en')" class="px-3 py-1 bg-indigo-600 rounded">English</button>
-    <button onclick="setLanguage('kn')" class="px-3 py-1 bg-indigo-600 rounded">ಕನ್ನಡ</button>
-  </div>
-</header>
+  <!-- Tabs (Rendered via JS) -->
+  <nav id="tabs" class="flex flex-wrap gap-2 p-4 bg-white shadow"></nav>
 
-<!-- TABS -->
-<nav id="tabs" class="flex flex-wrap gap-3 p-4 bg-gray-800 border-b border-gray-700"></nav>
+  <!-- Content -->
+  <main id="content" class="p-4"></main>
 
-<!-- CONTENT -->
-<main id="content" class="p-6 text-lg">
-  Click a tab to start
-</main>
+  <!-- Script -->
+  <script src="js/app.js"></script>
 
-<script src="js/app.js"></script>
 </body>
 </html>

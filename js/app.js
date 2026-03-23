@@ -65,7 +65,7 @@ function generateSaraliExercises() {
 }
 
 // ----------------------------
-// Speed Generator (Carnatic Correct)
+// Speed Generator
 // ----------------------------
 function generateSpeeds(pattern) {
   return {
@@ -83,7 +83,7 @@ function formatSpeed(pattern, notesPerBeat) {
     output.push(group.join(" "));
   }
 
-  return output.join("   "); // spacing between beats
+  return output.join("   ");
 }
 
 // ----------------------------
@@ -185,7 +185,6 @@ function initTabs() {
     `;
 
     btn.addEventListener("click", () => loadTab(tab.id));
-
     tabContainer.appendChild(btn);
   });
 }
@@ -223,15 +222,15 @@ function setLanguage(lang) {
 }
 
 // ----------------------------
-// Init App
+// Init App (FIXED)
 // ----------------------------
-document
-  .getElementById("btn-en")
-  .addEventListener("click", () => setLanguage("en"));
+document.addEventListener("DOMContentLoaded", () => {
+  const btnEn = document.getElementById("btn-en");
+  const btnKn = document.getElementById("btn-kn");
 
-document
-  .getElementById("btn-kn")
-  .addEventListener("click", () => setLanguage("kn"));
+  if (btnEn) btnEn.addEventListener("click", () => setLanguage("en"));
+  if (btnKn) btnKn.addEventListener("click", () => setLanguage("kn"));
 
-initTabs();
-renderContent();
+  initTabs();
+  renderContent();
+});

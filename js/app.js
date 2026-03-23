@@ -67,14 +67,13 @@ function loadTab(event, tab, isLangSwitch = false) {
   }
 
   if (tab === "basic") {
-    content.innerHTML = `
-      <h2 class="text-2xl mb-4">${tabConfig.basic[currentLang]}</h2>
-      ${exerciseSection("Sarali Varisai", "ಸರಳಿ ವರಿಸೈ")}
-      ${exerciseSection("Janta Varisai", "ಜಂಟ ವರಿಸೈ")}
-      ${exerciseSection("Datu Varisai", "ದಟ್ಟು ವರಿಸೈ")}
-      ${exerciseSection("Alankara", "ಅಲಂಕಾರ")}
-    `;
-  } else {
+    content.innerHTML =
+      exerciseSection("Sarali Varisai", "ಸರಳಿ ವರಿಸೈ") +
+      exerciseSection("Jantai Varisai", "ಜಂಟೈ ವರಿಸೈ") +
+      exerciseSection("Dhatu Varisai", "ಧಾಟು ವರಿಸೈ") +
+      exerciseSection("Alankara", "ಅಲಂಕಾರ");
+    
+  } else
     content.innerHTML = `
       <div class="bg-gray-800 p-4 rounded">
         <h2 class="text-xl mb-2">${tabConfig[tab][currentLang]}</h2>

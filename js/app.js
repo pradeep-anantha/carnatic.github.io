@@ -12,14 +12,7 @@ const state = {
 // Tabs
 // ----------------------------
 const tabs = [
-  { id: "basic", en: "Basic Exercises", kn: "ಮೂಲ ಅಭ್ಯಾಸಗಳು" },
-  { id: "varnas", en: "Varnas", kn: "ವರಣಗಳು" },
-  { id: "madhyama", en: "Madhyama Keerthana", kn: "ಮಧ್ಯಮ ಕೀರ್ತನೆಗಳು" },
-  { id: "vilamba", en: "Vilamba Keerthana", kn: "ವಿಲಂಬ ಕೀರ್ತನೆಗಳು" },
-  { id: "tillana", en: "Tillana", kn: "ತಿಲ್ಲಾನಾ" },
-  { id: "devaranama", en: "Devaranama", kn: "ದೇವರನಾಮ" },
-  { id: "vachana", en: "Vachana", kn: "ವಚನ" },
-  { id: "composers", en: "Composers", kn: "ಸಂಗೀತಗಾರರು" }
+  { id: "basic", en: "Basic Exercises", kn: "ಮೂಲ ಅಭ್ಯಾಸಗಳು" }
 ];
 
 // ----------------------------
@@ -31,71 +24,60 @@ const SWARAS = {
 };
 
 // ----------------------------
+// Raga Data
+// ----------------------------
+const RAGA = {
+  en: {
+    name: "Mayamalavagowla",
+    arohana: ["S", "R₁", "G₃", "M₁", "P", "D₁", "N₃", "S"],
+    avarohana: ["S", "N₃", "D₁", "P", "M₁", "G₃", "R₁", "S"]
+  },
+  kn: {
+    name: "ಮಾಯಾಮಾಳವಗೌಳ",
+    arohana: ["ಸ", "ರಿ₁", "ಗ₃", "ಮ₁", "ಪ", "ಧ₁", "ನಿ₃", "ಸ"],
+    avarohana: ["ಸ", "ನಿ₃", "ಧ₁", "ಪ", "ಮ₁", "ಗ₃", "ರಿ₁", "ಸ"]
+  }
+};
+
+// ----------------------------
 // Translation
 // ----------------------------
 function t(key) {
   const dict = {
-    Exercise: { en: "Exercise", kn: "ಅಭ್ಯಾಸ" },
     "Speed 1": { en: "Speed 1", kn: "ವೇಗ ೧" },
     "Speed 2": { en: "Speed 2", kn: "ವೇಗ ೨" },
     "Speed 3": { en: "Speed 3", kn: "ವೇಗ ೩" },
-    "Sarali Varisai": { en: "Sarali Varisai", kn: "ಸರಳಿ ವರಿಸೈ" },
-    "Content will be added here": {
-      en: "Content will be added here",
-      kn: "ಇಲ್ಲಿ ವಿಷಯ ಸೇರಲಾಗುತ್ತದೆ"
-    }
+    "Arohana": { en: "Arohana", kn: "ಆರೋಹಣ" },
+    "Avarohana": { en: "Avarohana", kn: "ಅವರೋಹಣ" }
   };
-  return dict[key] ? dict[key][state.lang] : key;
+  return dict[key][state.lang];
 }
 
 // ----------------------------
-// Sarali Varisai (Correct Structure)
+// Speed Engine (Correct)
 // ----------------------------
-function getSaraliExercises() {
-  const s = SWARAS[state.lang];
-
-  return [
-    [[s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7]]],
-
-    [[s[0], s[1], s[2], s[3]], [s[1], s[2], s[3], s[4]], [s[2], s[3], s[4], s[5]], [s[3], s[4], s[5], s[6]], [s[4], s[5], s[6], s[7]]],
-
-    [[s[0], s[1], s[0], s[1]], [s[1], s[2], s[1], s[2]], [s[2], s[3], s[2], s[3]], [s[3], s[4], s[3], s[4]], [s[4], s[5], s[4], s[5]], [s[5], s[6], s[5], s[6]], [s[6], s[7], s[6], s[7]]],
-
-    [[s[0], s[1], s[2], s[3], s[0], s[1], s[2], s[3]], [s[4], s[5], s[6], s[7]]],
-
-    [[s[0], s[2], s[1], s[3]], [s[1], s[3], s[2], s[4]], [s[2], s[4], s[3], s[5]], [s[3], s[5], s[4], s[6]], [s[4], s[6], s[5], s[7]]],
-
-    [[s[0], s[1], s[2], s[1]], [s[1], s[2], s[3], s[2]], [s[2], s[3], s[4], s[3]], [s[3], s[4], s[5], s[4]], [s[4], s[5], s[6], s[5]], [s[5], s[6], s[7], s[6]]],
-
-    [[s[0], s[1], s[2], s[3]], [s[3], s[2], s[1], s[0]], [s[1], s[2], s[3], s[4]], [s[4], s[3], s[2], s[1]], [s[2], s[3], s[4], s[5]], [s[5], s[4], s[3], s[2]]]
-  ];
-}
-
-// ----------------------------
-// Correct Speed Rendering
-// ----------------------------
-function generateSpeeds(lines) {
+function generateSpeeds(sequence) {
   return {
-    speed1: lines.map(line => renderLine(line, 1)).join("\n"),
-    speed2: lines.map(line => renderLine(line, 2)).join("\n"),
-    speed3: lines.map(line => renderLine(line, 4)).join("\n")
+    speed1: render(sequence, 1),
+    speed2: render(sequence, 2),
+    speed3: render(sequence, 4)
   };
 }
 
-function renderLine(line, notesPerBeat) {
+function render(seq, notesPerBeat) {
   let groups = [];
 
-  for (let i = 0; i < line.length; i += notesPerBeat) {
-    groups.push(line.slice(i, i + notesPerBeat).join(" "));
+  for (let i = 0; i < seq.length; i += notesPerBeat) {
+    groups.push(seq.slice(i, i + notesPerBeat).join(" "));
   }
 
-  return applyAdiTala(groups);
+  return applyTala(groups);
 }
 
 // ----------------------------
 // Adi Tala (4 + 2 + 2)
 // ----------------------------
-function applyAdiTala(groups) {
+function applyTala(groups) {
   const laghu = groups.slice(0, 4).join("   ");
   const d1 = groups.slice(4, 6).join("   ");
   const d2 = groups.slice(6, 8).join("   ");
@@ -110,66 +92,69 @@ function applyAdiTala(groups) {
 }
 
 // ----------------------------
-// Render Sarali
+// Render Raga
 // ----------------------------
-function renderSarali() {
-  const exercises = getSaraliExercises();
-  let html = `<div class="mb-8">
-    <h2 class="text-xl font-bold mb-4">${t("Sarali Varisai")}</h2>
-  `;
+function renderRaga() {
+  const r = RAGA[state.lang];
 
-  exercises.forEach((lines, i) => {
-    const speeds = generateSpeeds(lines);
+  const aroSpeeds = generateSpeeds(r.arohana);
+  const avaSpeeds = generateSpeeds(r.avarohana);
 
-    html += `
-      <div class="bg-white p-4 mb-6 rounded-lg shadow border">
+  return `
+    <div class="bg-white p-5 rounded-lg shadow border space-y-6">
 
-        <div class="font-bold mb-3">
-          ${t("Exercise")} ${i + 1}
-        </div>
+      <div class="text-2xl font-bold">${r.name}</div>
 
-        <div class="space-y-4 text-blue-700">
+      <!-- AROHANA -->
+      <div>
+        <div class="font-semibold mb-2">${t("Arohana")}</div>
 
-          <div>
-            <div class="text-gray-500 text-sm">${t("Speed 1")}</div>
-            <pre class="bg-gray-50 p-3 rounded font-mono overflow-x-auto">${speeds.speed1}</pre>
-          </div>
-
-          <div>
-            <div class="text-gray-500 text-sm">${t("Speed 2")}</div>
-            <pre class="bg-gray-50 p-3 rounded font-mono overflow-x-auto">${speeds.speed2}</pre>
-          </div>
-
-          <div>
-            <div class="text-gray-500 text-sm">${t("Speed 3")}</div>
-            <pre class="bg-gray-50 p-3 rounded font-mono overflow-x-auto">${speeds.speed3}</pre>
-          </div>
-
-        </div>
-
+        ${renderSpeedBlock(aroSpeeds)}
       </div>
-    `;
-  });
 
-  html += `</div>`;
-  return html;
+      <!-- AVAROHANA -->
+      <div>
+        <div class="font-semibold mb-2">${t("Avarohana")}</div>
+
+        ${renderSpeedBlock(avaSpeeds)}
+      </div>
+
+    </div>
+  `;
 }
 
 // ----------------------------
-// Main Render
+// Speed Block UI
+// ----------------------------
+function renderSpeedBlock(speeds) {
+  return `
+    <div class="space-y-3 text-blue-700">
+
+      <div>
+        <div class="text-sm text-gray-500">${t("Speed 1")}</div>
+        <pre class="bg-gray-50 p-3 rounded font-mono">${speeds.speed1}</pre>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-500">${t("Speed 2")}</div>
+        <pre class="bg-gray-50 p-3 rounded font-mono">${speeds.speed2}</pre>
+      </div>
+
+      <div>
+        <div class="text-sm text-gray-500">${t("Speed 3")}</div>
+        <pre class="bg-gray-50 p-3 rounded font-mono">${speeds.speed3}</pre>
+      </div>
+
+    </div>
+  `;
+}
+
+// ----------------------------
+// Render Content
 // ----------------------------
 function renderContent() {
   const content = document.getElementById("content");
-
-  if (state.currentTab === "basic") {
-    content.innerHTML = renderSarali();
-  } else {
-    content.innerHTML = `
-      <div class="p-4 bg-white rounded shadow">
-        ${t("Content will be added here")}
-      </div>
-    `;
-  }
+  content.innerHTML = renderRaga();
 }
 
 // ----------------------------
@@ -183,24 +168,14 @@ function initTabs() {
     const btn = document.createElement("button");
 
     btn.textContent = tab[state.lang];
-    btn.className = `px-4 py-2 rounded ${
-      state.currentTab === tab.id
-        ? "bg-blue-500 text-white"
-        : "bg-gray-200 hover:bg-gray-300"
-    }`;
-
-    btn.onclick = () => {
-      state.currentTab = tab.id;
-      renderContent();
-      initTabs();
-    };
+    btn.className = "px-4 py-2 rounded bg-blue-500 text-white";
 
     nav.appendChild(btn);
   });
 }
 
 // ----------------------------
-// Language
+// Language Switch
 // ----------------------------
 function setLanguage(lang) {
   state.lang = lang;
@@ -208,8 +183,8 @@ function setLanguage(lang) {
   document.getElementById("title").textContent =
     lang === "en" ? "Carnatic Learning" : "ಕಾರ್ನಾಟಿಕ್ ಲರ್ನಿಂಗ್";
 
-  initTabs();
   renderContent();
+  initTabs();
 }
 
 // ----------------------------

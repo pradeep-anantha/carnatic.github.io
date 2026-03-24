@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <title>Carnatic Flute Syllabus</title>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 body {
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   margin: 0;
   background: #f5f6fa;
 }
@@ -17,15 +16,6 @@ body {
   padding: 15px;
   background: white;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.title {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.tabs {
-  margin-top: 10px;
 }
 
 .tabs button {
@@ -42,20 +32,14 @@ body {
   color: white;
 }
 
-.search input {
-  width: 100%;
-  padding: 8px;
-  margin-top: 10px;
-}
-
 .container {
   padding: 15px;
 }
 
 .card {
   background: white;
-  margin-bottom: 10px;
   padding: 10px;
+  margin-bottom: 10px;
   border-radius: 8px;
 }
 
@@ -63,136 +47,100 @@ body {
   font-weight: bold;
   margin-bottom: 5px;
 }
-
-.item {
-  margin-left: 10px;
-}
 </style>
-
 </head>
 
 <body>
 
 <div class="header">
-  <div class="title">🎶 Carnatic Flute Syllabus</div>
+  <h2>🎶 Carnatic Flute Syllabus</h2>
 
-  <div id="levelTabs" class="tabs"></div>
-  <div id="sectionTabs" class="tabs"></div>
-
-  <div class="search">
-    <input type="text" placeholder="Search..." onkeyup="searchData(this.value)">
-  </div>
+  <div id="levels" class="tabs"></div>
+  <div id="sections" class="tabs"></div>
 </div>
 
-<div class="container" id="content"></div>
+<div id="content" class="container"></div>
 
 <script>
 
-// 🔥 PUT YOUR KEY HERE
-const SUPABASE_URL = "https://jlnyecsqjdphgsaabyja.supabase.co";
-const SUPABASE_KEY = "sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk";
+const supabase = window.supabase.createClient(
+  "https://jlnyecsqjdphgsaabyja.supabase.co",
+  "sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk"
+);
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let categoriesMap = {};
+let subcategoriesMap = {};
 
-let currentData = [];
-
-// ======================
+// =====================
 // INIT
-// ======================
+// =====================
 async function init() {
-  const { data, error } = await supabase.from('levels').select('*');
 
-  if (error) {
-    console.error(error);
-    alert("Error loading levels");
-    return;
-  }
+  // preload categories
+  const { data: categories } = await supabase.from('categories').select('*');
+  categories.forEach(c => categoriesMap[c.id] = c.name);
 
-  const levelTabs = document.getElementById('levelTabs');
+  const { data: subcategories } = await supabase.from('subcategories').select('*');
+  subcategories.forEach(s => subcategoriesMap[s.id] = s.name);
 
-  data.forEach((l, i) => {
+  // load levels
+  const { data: levels } = await supabase.from('levels').select('*');
+
+  const levelDiv = document.getElementById('levels');
+
+  levels.forEach((l, i) => {
     const btn = document.createElement('button');
     btn.innerText = l.name;
-    btn.onclick = () => loadLevel(l, btn);
-    levelTabs.appendChild(btn);
+    btn.onclick = () => loadSections(l, btn);
+    levelDiv.appendChild(btn);
 
-    if (i === 0) loadLevel(l, btn);
+    if (i === 0) loadSections(l, btn);
   });
 }
 
-// ======================
-// LOAD LEVEL
-// ======================
-async function loadLevel(level, btn) {
+// =====================
+// LOAD SECTIONS
+// =====================
+async function loadSections(level, btn) {
 
-  setActive('levelTabs', btn);
+  setActive('levels', btn);
 
-  const { data: sections, error } = await supabase
+  const { data: sections } = await supabase
     .from('sections')
     .select('*')
     .eq('level_id', level.id);
 
-  if (error) {
-    console.error(error);
-    alert("Error loading sections");
-    return;
-  }
-
-  const sectionTabs = document.getElementById('sectionTabs');
-  sectionTabs.innerHTML = '';
+  const sectionDiv = document.getElementById('sections');
+  sectionDiv.innerHTML = '';
 
   sections.forEach((s, i) => {
     const b = document.createElement('button');
     b.innerText = s.name;
-    b.onclick = () => loadSection(s, b);
-    sectionTabs.appendChild(b);
+    b.onclick = () => loadSyllabus(s, b);
+    sectionDiv.appendChild(b);
 
-    if (i === 0) loadSection(s, b);
+    if (i === 0) loadSyllabus(s, b);
   });
 }
 
-// ======================
-// LOAD SECTION
-// ======================
-async function loadSection(section, btn) {
+// =====================
+// LOAD SYLLABUS
+// =====================
+async function loadSyllabus(section, btn) {
 
-  setActive('sectionTabs', btn);
+  setActive('sections', btn);
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('syllabus')
-    .select(`
-      id,
-      content_type,
-      value,
-      notes,
-      category_id,
-      subcategory_id
-    `)
+    .select('*')
     .eq('section_id', section.id);
 
-  if (error) {
-    console.error(error);
-    alert("Error loading syllabus");
-    return;
-  }
-
-  // Fetch categories separately
-  const { data: categories } = await supabase.from('categories').select('*');
-  const { data: subcategories } = await supabase.from('subcategories').select('*');
-
-  // Map names
-  data.forEach(item => {
-    item.category = categories.find(c => c.id === item.category_id)?.name;
-    item.subcategory = subcategories.find(s => s.id === item.subcategory_id)?.name;
-  });
-
-  currentData = data;
   render(data);
 }
 
-// ======================
+// =====================
 // RENDER
-// ======================
+// =====================
 function render(data) {
 
   const container = document.getElementById('content');
@@ -201,8 +149,10 @@ function render(data) {
   const grouped = {};
 
   data.forEach(item => {
-    if (!grouped[item.category]) grouped[item.category] = [];
-    grouped[item.category].push(item);
+    const cat = categoriesMap[item.category_id] || 'Other';
+
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(item);
   });
 
   Object.keys(grouped).forEach(cat => {
@@ -217,13 +167,13 @@ function render(data) {
     card.appendChild(title);
 
     grouped[cat].forEach(item => {
+
       const div = document.createElement('div');
-      div.className = 'item';
 
       let text = '';
 
-      if (item.subcategory) {
-        text += item.subcategory + ": ";
+      if (item.subcategory_id) {
+        text += subcategoriesMap[item.subcategory_id] + ': ';
       }
 
       text += item.value;
@@ -240,26 +190,11 @@ function render(data) {
   });
 }
 
-// ======================
-// SEARCH
-// ======================
-function searchData(q) {
-  q = q.toLowerCase();
-
-  const filtered = currentData.filter(item =>
-    (item.value || '').toLowerCase().includes(q) ||
-    (item.notes || '').toLowerCase().includes(q) ||
-    (item.category || '').toLowerCase().includes(q)
-  );
-
-  render(filtered);
-}
-
-// ======================
+// =====================
 // ACTIVE TAB
-// ======================
-function setActive(parentId, btn) {
-  const parent = document.getElementById(parentId);
+// =====================
+function setActive(id, btn) {
+  const parent = document.getElementById(id);
   Array.from(parent.children).forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }

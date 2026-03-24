@@ -1,30 +1,51 @@
 <!DOCTYPE html>
-<html lang="kn">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ಪ್ರಾಥಮಿಕ ಹಂತ - ಶ್ರೇಣಿ ಪತ್ರಿಕೆ</title>
+<title>Carnatic Learning</title>
 
 <style>
 body {
-  font-family: "Noto Sans Kannada", Arial;
-  background: #f3f4f6;
+  font-family: "Noto Sans Kannada", "Segoe UI", sans-serif;
+  background: #f1f5f9;
+  margin: 0;
   padding: 20px;
+  color: #1e293b;
 }
 
 h1 {
   text-align: center;
+  margin-bottom: 10px;
+}
+
+.toggle {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 8px 14px;
+  margin: 5px;
+  border: none;
+  border-radius: 8px;
+  background: #6366f1;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #4f46e5;
 }
 
 .container {
-  max-width: 800px;
+  max-width: 900px;
   margin: auto;
 }
 
-/* Level 1 */
-.card {
+.card, .sub-card {
   background: white;
-  padding: 15px;
+  padding: 14px;
   border-radius: 12px;
   margin-bottom: 10px;
   cursor: pointer;
@@ -32,127 +53,142 @@ h1 {
   justify-content: space-between;
 }
 
-/* Level 2 */
 .sub-card {
-  background: #f9fafb;
-  padding: 12px;
-  border-radius: 10px;
-  margin: 8px 0;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
+  background: #f8fafc;
 }
 
-/* Content */
 .content {
   display: none;
-  padding: 10px 15px;
+  padding: 10px;
+}
+
+.music {
+  background: #fff;
+  padding: 10px;
+  margin: 6px 0;
+  border-left: 4px solid #6366f1;
+  font-family: monospace;
+  font-size: 18px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🎶 ಪ್ರಾಥಮಿಕ ಹಂತ - ಶ್ರೇಣಿ ಪತ್ರಿಕೆ</h1>
+<h1>🎶 Carnatic Music Learning</h1>
+
+<div class="toggle">
+  <button onclick="setLang('kn')">ಕನ್ನಡ</button>
+  <button onclick="setLang('en')">English</button>
+</div>
 
 <div id="app" class="container"></div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
 
-  const HIGH_SA = "ಸ\u0307";
+let currentLang = "kn";
+const HIGH_SA_KN = "ಸ\u0307";
+const HIGH_SA_EN = "Ṡ";
 
-  const saraliData = [
-    {
-      title: "ಸರಳಿ 1",
-      lines: [
-        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-      ]
-    },
-    {
-      title: "ಸರಳಿ 2",
-      lines: [
-        "ಸ ರಿ₁ ಸ ರಿ₁ | ಸ ರಿ₁ ಗ₃ ಮ₁ ||",
-        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-        HIGH_SA + " ನಿ₃ " + HIGH_SA + " ನಿ₃ | " + HIGH_SA + " ನಿ₃ ದ₁ ಪ ||",
-        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-      ]
-    },
-    {
-      title: "ಸರಳಿ 3",
-      lines: [
-        "ಸ ರಿ₁ ಗ₃ ಸ | ರಿ₁ ಗ₃ ಸ ರಿ₁ ||",
-        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-        HIGH_SA + " ನಿ₃ ದ₁ " + HIGH_SA + " | ನಿ₃ ದ₁ " + HIGH_SA + " ನಿ₃ ||",
-        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-      ]
-    },
-    {
-      title: "ಸರಳಿ 4",
-      lines: [
-        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಸ ರಿ₁ ಗ₃ ಮ₁ ||",
-        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-        HIGH_SA + " ನಿ₃ ದ₁ ಪ | " + HIGH_SA + " ನಿ₃ ದ₁ ಪ ||",
-        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-      ]
-    },
-    {
-      title: "ಸರಳಿ 5",
-      lines: [
-        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ " + HIGH_SA + " ರಿ₁ ಸ ||",
-        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ " + HIGH_SA + " ನಿ₃ ||",
-        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-      ]
-    },
-    {
-      title: "ಸರಳಿ 6",
-      lines: [
-        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ಸ ರಿ₁ ||",
-        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ " + HIGH_SA + " ನಿ₃ ||",
-        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-      ]
-    },
-    {
-      title: "ಸರಳಿ 7",
-      lines: [
-        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ ~ ||",
-        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ~ ||",
-        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-      ]
-    },
-    {
-      title: "ಸರಳಿ 8",
-      lines: [
-        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ಮ₁ ಗ₃ ರಿ₁ ||",
-        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಪ ದ₁ ನಿ₃ ||",
-        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-      ]
-    }
-  ];
+// ================= SARALI DATA =================
+const saraliRaw = [
+  [
+    ["S R G M", "P D N Ṡ"],
+    ["Ṡ N D P", "M G R S"]
+  ],
+  [
+    ["S R S R", "S R G M"],
+    ["S R G M", "P D N Ṡ"],
+    ["Ṡ N Ṡ N", "Ṡ N D P"],
+    ["Ṡ N D P", "M G R S"]
+  ],
+  [
+    ["S R G S", "R G S R"],
+    ["S R G M", "P D N Ṡ"],
+    ["Ṡ N D Ṡ", "N D Ṡ N"],
+    ["Ṡ N D P", "M G R S"]
+  ],
+  [
+    ["S R G M", "S R G M"],
+    ["S R G M", "P D N Ṡ"],
+    ["Ṡ N D P", "Ṡ N D P"],
+    ["Ṡ N D P", "M G R S"]
+  ],
+  [
+    ["S R G M", "P Ṡ R S"],
+    ["S R G M", "P D N Ṡ"],
+    ["Ṡ N D P", "M Ṡ N"],
+    ["Ṡ N D P", "M G R S"]
+  ],
+  [
+    ["S R G M", "P D S R"],
+    ["S R G M", "P D N Ṡ"],
+    ["Ṡ N D P", "M G Ṡ N"],
+    ["Ṡ N D P", "M G R S"]
+  ],
+  [
+    ["S R G M", "P D N"],
+    ["S R G M", "P D N Ṡ"],
+    ["Ṡ N D P", "M G R"],
+    ["Ṡ N D P", "M G R S"]
+  ],
+  [
+    ["S R G M", "P M G R"],
+    ["S R G M", "P D N Ṡ"],
+    ["Ṡ N D P", "M P D N"],
+    ["Ṡ N D P", "M G R S"]
+  ]
+];
 
+// ================= CONVERSION =================
+
+function toKannada(line) {
+  return line
+    .replace(/S/g, "ಸ")
+    .replace(/R/g, "ರಿ₁")
+    .replace(/G/g, "ಗ₃")
+    .replace(/M/g, "ಮ₁")
+    .replace(/P/g, "ಪ")
+    .replace(/D/g, "ದ₁")
+    .replace(/N/g, "ನಿ₃")
+    .replace(/Ṡ/g, HIGH_SA_KN);
+}
+
+function toEnglish(line) {
+  return line.replace(/Ṡ/g, HIGH_SA_EN);
+}
+
+// ================= BUILD UI =================
+
+function buildUI() {
   const app = document.getElementById("app");
+  app.innerHTML = "";
 
   const mainCard = document.createElement("div");
   mainCard.className = "card";
-  mainCard.innerHTML = "🎵 ಸರಳಿ ವರಸೆಗಳು <span>▼</span>";
+  mainCard.innerHTML = "🎵 ಸ್ವರಾವಳಿ <span>▼</span>";
 
   const mainContent = document.createElement("div");
   mainContent.className = "content";
 
-  saraliData.forEach(sarali => {
+  saraliRaw.forEach((lesson, index) => {
+
     const subCard = document.createElement("div");
     subCard.className = "sub-card";
-    subCard.innerHTML = `${sarali.title} <span>▶</span>`;
+    subCard.innerHTML = `ಸರಳಿ ${index+1} <span>▶</span>`;
 
     const subContent = document.createElement("div");
     subContent.className = "content";
 
-    subContent.innerHTML = sarali.lines.map(l => `<div>${l}</div>`).join("");
+    lesson.forEach(line => {
+
+      let text = line.join(" | ") + " ||";
+
+      if (currentLang === "kn") text = toKannada(text);
+      else text = toEnglish(text);
+
+      subContent.innerHTML += `<div class="music">${text}</div>`;
+    });
 
     subCard.onclick = (e) => {
       e.stopPropagation();
@@ -171,8 +207,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
   app.appendChild(mainCard);
   app.appendChild(mainContent);
+}
 
-});
+// ================= TOGGLE =================
+
+function setLang(lang) {
+  currentLang = lang;
+  buildUI();
+}
+
+// INIT
+buildUI();
+
 </script>
 
 </body>

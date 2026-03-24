@@ -1,285 +1,297 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Carnatic Learning</title>
+<title>Carnatic Flute Syllabus</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 body {
-  font-family: "Noto Sans Kannada", sans-serif;
-  background: #f1f5f9;
-  padding: 20px;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  background: #f5f6fa;
 }
 
-h1 { text-align:center; }
-
-.toggle {
-  text-align:center;
-  margin-bottom:20px;
+/* HEADER */
+.header {
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  z-index: 10;
 }
 
-button {
-  padding:8px 14px;
-  margin:5px;
-  border:none;
-  border-radius:8px;
-  background:#6366f1;
-  color:white;
-  cursor:pointer;
+.title {
+  font-size: 20px;
+  font-weight: bold;
 }
 
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.tabs button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 20px;
+  background: #e0e0e0;
+  cursor: pointer;
+}
+
+.tabs button.active {
+  background: #4CAF50;
+  color: white;
+}
+
+/* SEARCH */
+.search {
+  margin-top: 10px;
+}
+
+.search input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* CONTENT */
 .container {
-  max-width:900px;
-  margin:auto;
+  padding: 15px;
 }
 
-.card, .sub-card {
-  background:white;
-  padding:14px;
-  border-radius:12px;
-  margin-bottom:10px;
-  cursor:pointer;
-  display:flex;
-  justify-content:space-between;
+/* CARD */
+.card {
+  background: white;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
-.sub-card { background:#f8fafc; }
-
-.content {
-  display:none;
-  padding:10px;
+/* CATEGORY */
+.category {
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-.music {
-  font-family:monospace;
-  font-size:18px;
-  padding:8px;
-  margin:6px 0;
-  border-left:4px solid #6366f1;
+/* ITEMS */
+.item {
+  margin-left: 10px;
+  padding: 4px 0;
+  font-size: 14px;
 }
 
-.theory {
-  padding:8px;
-  margin:6px 0;
-  border-left:4px solid #10b981;
+/* COLLAPSE */
+.hidden {
+  display: none;
 }
+
 </style>
 </head>
 
 <body>
 
-<h1>🎶 Carnatic Learning</h1>
+<div class="header">
+  <div class="title">🎶 Carnatic Flute Syllabus</div>
 
-<div class="toggle">
-  <button onclick="setLang('kn')">ಕನ್ನಡ</button>
-  <button onclick="setLang('en')">English</button>
+  <!-- LEVEL -->
+  <div id="levelTabs" class="tabs"></div>
+
+  <!-- SECTIONS -->
+  <div id="sectionTabs" class="tabs"></div>
+
+  <!-- SEARCH -->
+  <div class="search">
+    <input type="text" placeholder="Search raga / kriti..." onkeyup="searchData(this.value)">
+  </div>
 </div>
 
-<div id="app" class="container"></div>
+<div class="container" id="content"></div>
 
 <script>
 
-// ================= CONFIG =================
-let lang = "kn";
-const HIGH_SA_KN = "ಸ\u0307";
-const HIGH_SA_EN = "Ṡ";
+// ==========================
+// SUPABASE CONFIG
+// ==========================
+const SUPABASE_URL = "https://jlnyecsqjdphgsaabyja.supabase.co";
+const SUPABASE_KEY = "sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ================= CONVERSION =================
-function toKannada(text){
-  return text
-  .replace(/S/g,"ಸ")
-  .replace(/R1/g,"ರಿ₁")
-  .replace(/G3/g,"ಗ₃")
-  .replace(/M1/g,"ಮ₁")
-  .replace(/P/g,"ಪ")
-  .replace(/D1/g,"ದ₁")
-  .replace(/N3/g,"ನಿ₃")
-  .replace(/Ṡ/g,HIGH_SA_KN);
-}
+// ==========================
+// STATE
+// ==========================
+let currentData = [];
+let currentLevel = '';
+let currentSection = '';
 
-// ================= DATA =================
+// ==========================
+// LOAD LEVELS
+// ==========================
+async function init() {
+  const { data } = await supabase.from('levels').select('*');
 
-const saraliRaw = [
-[
-["S R G M","P D N Ṡ"],
-["Ṡ N D P","M G R S"]
-],
-[
-["S R S R","S R G M"],
-["S R G M","P D N Ṡ"],
-["Ṡ N Ṡ N","Ṡ N D P"],
-["Ṡ N D P","M G R S"]
-],
-[
-["S R G S","R G S R"],
-["S R G M","P D N Ṡ"],
-["Ṡ N D Ṡ","N D Ṡ N"],
-["Ṡ N D P","M G R S"]
-],
-[
-["S R G M","S R G M"],
-["S R G M","P D N Ṡ"],
-["Ṡ N D P","Ṡ N D P"],
-["Ṡ N D P","M G R S"]
-],
-[
-["S R G M","P Ṡ R S"],
-["S R G M","P D N Ṡ"],
-["Ṡ N D P","M Ṡ N"],
-["Ṡ N D P","M G R S"]
-],
-[
-["S R G M","P D S R"],
-["S R G M","P D N Ṡ"],
-["Ṡ N D P","M G Ṡ N"],
-["Ṡ N D P","M G R S"]
-],
-[
-["S R G M","P D N"],
-["S R G M","P D N Ṡ"],
-["Ṡ N D P","M G R"],
-["Ṡ N D P","M G R S"]
-],
-[
-["S R G M","P M G R"],
-["S R G M","P D N Ṡ"],
-["Ṡ N D P","M P D N"],
-["Ṡ N D P","M G R S"]
-]
-];
+  const levelTabs = document.getElementById('levelTabs');
 
-// ================= BUILD =================
-
-function buildUI(){
-
-const app = document.getElementById("app");
-app.innerHTML = "";
-
-// ===== SWARAVALI =====
-const swara = createCard("🎵 ಸ್ವರಾವಳಿ");
-const swaraContent = createContent();
-
-const saraliCard = createSubCard("ಸರಳಿ ವರಸೆಗಳು");
-const saraliContent = createContent();
-
-saraliRaw.forEach((lesson, i)=>{
-
-  const lessonCard = createSubCard(`ಸರಳಿ ${i+1}`);
-  const lessonContent = createContent();
-
-  lesson.forEach(line=>{
-    let text = line.join(" | ") + " ||";
-
-    if(lang==="kn") text = toKannada(text);
-
-    lessonContent.innerHTML += `<div class="music">${text}</div>`;
+  data.forEach(l => {
+    const btn = document.createElement('button');
+    btn.innerText = l.name;
+    btn.onclick = () => loadLevel(l.name, btn);
+    levelTabs.appendChild(btn);
   });
 
-  attachToggle(lessonCard, lessonContent);
-  saraliContent.append(lessonCard, lessonContent);
-});
-
-attachToggle(saraliCard, saraliContent);
-swaraContent.append(saraliCard, saraliContent);
-
-// placeholders
-swaraContent.append(createPlaceholder("ಜಂಟಿ ವರಸೆಗಳು"));
-swaraContent.append(createPlaceholder("ದಾಟು ವರಸೆಗಳು"));
-swaraContent.append(createPlaceholder("ಅಲಂಕಾರಗಳು"));
-
-attachToggle(swara.card, swaraContent);
-
-// ===== RAGA =====
-const raga = createCard("🎼 ಮೇಳಕರ್ತ ರಾಗಗಳು");
-const ragaContent = createContent();
-
-const mmgCard = createSubCard("ಮಾಯಾಮಾಳವಗೌಳ");
-const mmgContent = createContent();
-
-let aro = "S R1 G3 M1 P D1 N3 Ṡ";
-let ava = "Ṡ N3 D1 P M1 G3 R1 S";
-
-if(lang==="kn"){
-  aro = toKannada(aro);
-  ava = toKannada(ava);
+  loadLevel('Junior', levelTabs.children[0]);
 }
 
-mmgContent.innerHTML = `
-<div class="theory"><b>ಆರೋಹಣ:</b> ${aro}</div>
-<div class="theory"><b>ಅವರೋಹಣ:</b> ${ava}</div>
-<div class="theory">ಸ್ವರಗಳು: ${lang==="kn" ? "ಸ ರಿ₁ ಗ₃ ಮ₁ ಪ ದ₁ ನಿ₃" : "S R1 G3 M1 P D1 N3"}</div>
-`;
+// ==========================
+// LOAD LEVEL
+// ==========================
+async function loadLevel(levelName, btn) {
 
-attachToggle(mmgCard, mmgContent);
-ragaContent.append(mmgCard, mmgContent);
+  currentLevel = levelName;
 
-attachToggle(raga.card, ragaContent);
+  setActive('levelTabs', btn);
 
-// ===== THEORY =====
-const theory = createCard("📘 ಶಾಸ್ತ್ರ ಭಾಗ");
-const theoryContent = createContent();
+  const { data } = await supabase
+    .from('sections')
+    .select('id, name, levels(name)')
+    .eq('levels.name', levelName);
 
-theoryContent.innerHTML = `
-<div class="theory">7 Swaras: ${lang==="kn"?"ಸ ರಿ ಗ ಮ ಪ ದ ನಿ":"S R G M P D N"}</div>
-<div class="theory">12 Swarasthanas</div>
-`;
+  const sectionTabs = document.getElementById('sectionTabs');
+  sectionTabs.innerHTML = '';
 
-attachToggle(theory.card, theoryContent);
+  data.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.innerText = s.name;
+    b.onclick = () => loadSection(s.id, b);
+    sectionTabs.appendChild(b);
 
-// ===== APPEND =====
-app.append(
-  swara.card, swaraContent,
-  raga.card, ragaContent,
-  theory.card, theoryContent
-);
+    if (i === 0) loadSection(s.id, b);
+  });
 }
 
-// ================= HELPERS =================
+// ==========================
+// LOAD SECTION
+// ==========================
+async function loadSection(sectionId, btn) {
 
-function createCard(title){
-  const card = document.createElement("div");
-  card.className="card";
-  card.innerHTML=title+" <span>▼</span>";
-  return {card};
+  currentSection = sectionId;
+  setActive('sectionTabs', btn);
+
+  const { data } = await supabase
+    .from('syllabus')
+    .select(`
+      id,
+      content_type,
+      value,
+      notes,
+      categories(name),
+      subcategories(name)
+    `)
+    .eq('section_id', sectionId);
+
+  currentData = data;
+  render(data);
 }
 
-function createSubCard(title){
-  const d=document.createElement("div");
-  d.className="sub-card";
-  d.innerHTML=title+" <span>▶</span>";
-  return d;
+// ==========================
+// RENDER
+// ==========================
+function render(data) {
+
+  const container = document.getElementById('content');
+  container.innerHTML = '';
+
+  const grouped = {};
+
+  data.forEach(item => {
+    const cat = item.categories?.name || 'Other';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(item);
+  });
+
+  Object.keys(grouped).forEach(cat => {
+
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const header = document.createElement('div');
+    header.className = 'category';
+    header.innerText = cat;
+
+    const list = document.createElement('div');
+
+    header.onclick = () => list.classList.toggle('hidden');
+
+    grouped[cat].forEach(item => {
+
+      const div = document.createElement('div');
+      div.className = 'item';
+
+      let text = '';
+
+      if (item.subcategories?.name) {
+        text += item.subcategories.name + ': ';
+      }
+
+      if (item.content_type === 'count') {
+        text += item.value;
+      }
+
+      if (item.content_type === 'text') {
+        text += item.value;
+      }
+
+      if (item.notes) {
+        text += ` (${item.notes})`;
+      }
+
+      div.innerText = text;
+      list.appendChild(div);
+    });
+
+    card.appendChild(header);
+    card.appendChild(list);
+    container.appendChild(card);
+  });
 }
 
-function createContent(){
-  const d=document.createElement("div");
-  d.className="content";
-  return d;
+// ==========================
+// SEARCH
+// ==========================
+function searchData(query) {
+
+  query = query.toLowerCase();
+
+  const filtered = currentData.filter(item => {
+    return (
+      item.value?.toLowerCase().includes(query) ||
+      item.notes?.toLowerCase().includes(query) ||
+      item.categories?.name?.toLowerCase().includes(query)
+    );
+  });
+
+  render(filtered);
 }
 
-function createPlaceholder(title){
-  const c = createSubCard(title);
-  const ct = createContent();
-  ct.innerHTML = "<div class='theory'>Coming next</div>";
-  attachToggle(c, ct);
-  return [c, ct];
-}
-
-function attachToggle(c,ct){
-  c.onclick=(e)=>{
-    e.stopPropagation();
-    ct.style.display = ct.style.display==="block"?"none":"block";
-  };
-}
-
-// ================= LANG =================
-function setLang(l){
-  lang=l;
-  buildUI();
+// ==========================
+// ACTIVE TAB
+// ==========================
+function setActive(parentId, btn) {
+  const parent = document.getElementById(parentId);
+  Array.from(parent.children).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
 }
 
 // INIT
-buildUI();
+init();
 
 </script>
 

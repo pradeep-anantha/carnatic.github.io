@@ -3,19 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ಪ್ರಾಥಮಿಕ ಹಂತ - ಶ್ರೇಣಿ ಪತ್ರಿಕೆ</title>
+<title>ಪ್ರಾಥಮಿಕ ಹಂತ</title>
 
 <style>
 body {
-  font-family: "Noto Sans Kannada", Arial, sans-serif;
+  font-family: "Noto Sans Kannada", Arial;
   background: #f3f4f6;
-  margin: 0;
   padding: 20px;
 }
 
 h1 {
   text-align: center;
-  margin-bottom: 30px;
 }
 
 .container {
@@ -23,31 +21,38 @@ h1 {
   margin: auto;
 }
 
+/* Level 1 */
 .card {
-  background: #fff;
-  border-radius: 12px;
-  margin-bottom: 15px;
+  background: white;
   padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 10px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
-  align-items: center;
 }
 
+/* Level 2 */
+.sub-card {
+  background: #f9fafb;
+  padding: 12px;
+  border-radius: 10px;
+  margin: 8px 0;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Content */
 .content {
   display: none;
-  background: #fff;
-  border-radius: 12px;
-  margin-top: -10px;
-  margin-bottom: 15px;
-  padding: 15px;
+  padding: 10px 15px;
 }
 
 ul {
   margin: 0;
   padding-left: 20px;
 }
-
 </style>
 </head>
 
@@ -55,79 +60,143 @@ ul {
 
 <h1>🎶 ಪ್ರಾಥಮಿಕ ಹಂತ - ಶ್ರೇಣಿ ಪತ್ರಿಕೆ</h1>
 
-<div class="container" id="app"></div>
+<div id="app" class="container"></div>
 
 <script>
 // ================= DATA =================
 const data = [
   {
     title: "🎵 ಪ್ರಾಯೋಗಿಕ ಪತ್ರಿಕೆ - 1",
-    content: `
-      <ul>
-        <li>ಸರಳಿ ವರಸೆಗಳು – 7</li>
-        <li>ಜಂಟಿ ವರಸೆಗಳು – 5</li>
-        <li>ಸ್ಥಾಯಿ ಅಲಂಕಾರಗಳು – 7</li>
-        <li>ದಾಟು ವರಸೆಗಳು – 4</li>
-        <li>ತಾರಸ್ಥಾಯಿ – 3</li>
-        <li>ಮಂದ್ರಸ್ಥಾಯಿ – 3</li>
-        <br>
-        <li><strong>ಗೀತೆಗಳು – 10</strong></li>
-        <li>ಪಿಳ್ಳಾರಿ – 4</li>
-        <li>ಸಂಚಾರಿ – 4</li>
-        <li>ಲಕ್ಷಣ – 2</li>
-        <br>
-        <li>ಜತಿಸ್ವರಗಳು – 4</li>
-      </ul>
-    `
+    subsections: [
+      {
+        title: "ಸರಳಿ ವರಸೆಗಳು",
+        content: `
+          <ul>
+            <li>ಸರಳಿ 1</li>
+            <li>ಸರಳಿ 2</li>
+            <li>ಸರಳಿ 3</li>
+            <li>ಸರಳಿ 4</li>
+            <li>ಸರಳಿ 5</li>
+            <li>ಸರಳಿ 6</li>
+            <li>ಸರಳಿ 7</li>
+          </ul>
+        `
+      },
+      {
+        title: "ಜಂಟಿ ವರಸೆಗಳು",
+        content: `
+          <ul>
+            <li>ಜಂಟಿ 1</li>
+            <li>ಜಂಟಿ 2</li>
+            <li>ಜಂಟಿ 3</li>
+            <li>ಜಂಟಿ 4</li>
+            <li>ಜಂಟಿ 5</li>
+          </ul>
+        `
+      },
+      {
+        title: "ಗೀತೆಗಳು",
+        content: `
+          <ul>
+            <li>ಪಿಳ್ಳಾರಿ – 4</li>
+            <li>ಸಂಚಾರಿ – 4</li>
+            <li>ಲಕ್ಷಣ – 2</li>
+          </ul>
+        `
+      }
+    ]
   },
+
   {
     title: "🎼 ಪ್ರಾಯೋಗಿಕ ಪತ್ರಿಕೆ - 2",
-    content: `
-      <ul>
-        <li><strong>ತಾನವರ್ಣಗಳು – 4</strong></li>
-        <li>ಶಂಕರಾಭರಣಂ</li>
-        <li>ಹಂಸಧ್ವನಿ</li>
-        <li>ಕಲ್ಯಾಣಿ</li>
-        <li>ಶ್ರೀರಾಗ</li>
-        <li>ಮೋಹನಂ</li>
-        <li>ಅಭೋಗಿ</li>
-        <li>ವಸಂತ</li>
-        <li>ಕಾಂಭೋಜಿ</li>
-        <br>
-        <li>ಮಧ್ಯಮ ಕಾಲ ಕೃತಿಗಳು – 10</li>
-        <li>ವಿಲಂಬ ಕಾಲ ಕೃತಿಗಳು – 5</li>
-      </ul>
-    `
+    subsections: [
+      {
+        title: "ರಾಗಗಳು",
+        content: `
+          <ul>
+            <li>ಶಂಕರಾಭರಣಂ</li>
+            <li>ಹಂಸಧ್ವನಿ</li>
+            <li>ಕಲ್ಯಾಣಿ</li>
+            <li>ಶ್ರೀರಾಗ</li>
+            <li>ಮೋಹನಂ</li>
+            <li>ಅಭೋಗಿ</li>
+            <li>ವಸಂತ</li>
+            <li>ಕಾಂಭೋಜಿ</li>
+          </ul>
+        `
+      },
+      {
+        title: "ಕೃತಿಗಳು",
+        content: `
+          <ul>
+            <li>ಮಧ್ಯಮ ಕಾಲ – 10</li>
+            <li>ವಿಲಂಬ ಕಾಲ – 5</li>
+          </ul>
+        `
+      }
+    ]
   },
+
   {
     title: "📘 ಶಾಸ್ತ್ರ ಭಾಗ",
-    content: `
-      <ul>
-        <li>ಸಂಗೀತದ ವ್ಯಾಖ್ಯಾನ</li>
-        <li>ಸ್ವರಗಳು</li>
-        <li>ಸ್ಥಾಯಿಗಳು</li>
-        <li>ರಾಗ ಜ್ಞಾನ</li>
-        <li>ತಾಳ</li>
-        <li>ವಾದ್ಯಗಳು</li>
-      </ul>
-    `
+    subsections: [
+      {
+        title: "ಮೂಲಭೂತ ಸಂಗೀತ",
+        content: `
+          <ul>
+            <li>ಸಂಗೀತ</li>
+            <li>ಸ್ವರಗಳು</li>
+            <li>ಸ್ಥಾಯಿಗಳು</li>
+          </ul>
+        `
+      },
+      {
+        title: "ರಾಗ ಲಕ್ಷಣ",
+        content: `
+          <ul>
+            <li>ಶಂಕರಾಭರಣಂ</li>
+            <li>ಕಲ್ಯಾಣಿ</li>
+            <li>ಮೋಹನಂ</li>
+          </ul>
+        `
+      }
+    ]
   }
 ];
 
 // ================= RENDER =================
 const app = document.getElementById("app");
 
-data.forEach((section, index) => {
+data.forEach(section => {
   const card = document.createElement("div");
   card.className = "card";
   card.innerHTML = `${section.title} <span>▼</span>`;
 
   const content = document.createElement("div");
   content.className = "content";
-  content.innerHTML = section.content;
+
+  section.subsections.forEach(sub => {
+    const subCard = document.createElement("div");
+    subCard.className = "sub-card";
+    subCard.innerHTML = `${sub.title} <span>▶</span>`;
+
+    const subContent = document.createElement("div");
+    subContent.className = "content";
+    subContent.innerHTML = sub.content;
+
+    subCard.onclick = (e) => {
+      e.stopPropagation();
+      subContent.style.display =
+        subContent.style.display === "block" ? "none" : "block";
+    };
+
+    content.appendChild(subCard);
+    content.appendChild(subContent);
+  });
 
   card.onclick = () => {
-    content.style.display = content.style.display === "block" ? "none" : "block";
+    content.style.display =
+      content.style.display === "block" ? "none" : "block";
   };
 
   app.appendChild(card);

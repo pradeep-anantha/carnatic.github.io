@@ -1,31 +1,220 @@
-<!-- index.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="kn">
 <head>
-  <meta charset="UTF-8">
-  <title>Carnatic Learning</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carnatic Flute Syllabus</title>
+
+<style>
+body {
+  font-family: "Noto Sans Kannada", Arial, sans-serif;
+  margin: 0;
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+header {
+  text-align: center;
+  padding: 20px;
+  background: white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px;
+}
+
+.tab {
+  padding: 10px 18px;
+  background: #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #2563eb;
+  color: white;
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 10px;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 15px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+}
+
+.section-title {
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+}
+
+.section-content {
+  display: none;
+  margin-top: 10px;
+}
+
+.search-box {
+  text-align: center;
+  margin: 15px;
+}
+
+input {
+  width: 60%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.raga-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+</style>
 </head>
-<body class="bg-gray-100 text-gray-900">
 
-  <!-- Header -->
-  <header class="bg-blue-600 text-white p-4 flex justify-between items-center">
-    <h1 id="title" class="text-xl font-bold">Carnatic Learning</h1>
+<body>
 
-    <!-- Language Toggle -->
-    <div class="space-x-2">
-      <button id="btn-en" class="px-3 py-1 rounded bg-white text-blue-600 font-semibold">English</button>
-      <button id="btn-kn" class="px-3 py-1 rounded bg-blue-500 text-white">ಕನ್ನಡ</button>
+<header>
+  <h1>🎶 Carnatic Flute Learning App</h1>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab(0)">Junior</div>
+  <div class="tab" onclick="switchTab(1)">Senior</div>
+  <div class="tab" onclick="switchTab(2)">Vidwat</div>
+</div>
+
+<div class="search-box">
+  <input type="text" placeholder="Search topics..." onkeyup="searchContent(this.value)">
+</div>
+
+<div class="container">
+
+<!-- JUNIOR -->
+<div class="content active">
+
+  <div class="card">
+    <div class="section-title" onclick="toggle(this)">🎵 Practical <span>▼</span></div>
+    <div class="section-content">
+      <ul>
+        <li>Sarali Varisai (7)</li>
+        <li>Janti Varisai (5)</li>
+        <li>Daatu Varisai (4)</li>
+        <li>Alankaras (7)</li>
+      </ul>
     </div>
-  </header>
+  </div>
 
-  <!-- Tabs -->
-  <nav id="tabs" class="flex flex-wrap gap-2 p-4 bg-white shadow"></nav>
+  <div class="card">
+    <div class="section-title" onclick="toggle(this)">🎼 Kritis <span>▼</span></div>
+    <div class="section-content">
+      <ul>
+        <li>Madhyamakala Kritis – 10</li>
+        <li>Vilambakala Kritis – 5</li>
+      </ul>
+    </div>
+  </div>
 
-  <!-- Content -->
-  <main id="content" class="p-4"></main>
+  <div class="card">
+    <div class="section-title" onclick="toggle(this)">🎨 Ragas <span>▼</span></div>
+    <div class="section-content">
+      <div class="raga-card">
+        <strong>Kalyani</strong><br>
+        Arohana: S R2 G3 M2 P D2 N3 S<br>
+        Avarohana: S N3 D2 P M2 G3 R2 S
+      </div>
 
-  <script src="js/app.js"></script>
+      <div class="raga-card">
+        <strong>Mohanam</strong><br>
+        Arohana: S R2 G3 P D2 S<br>
+        Avarohana: S D2 P G3 R2 S
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SENIOR -->
+<div class="content" style="display:none;">
+  <div class="card">
+    <div class="section-title" onclick="toggle(this)">🎵 Practical <span>▼</span></div>
+    <div class="section-content">
+      <ul>
+        <li>Advanced Varisai</li>
+        <li>Varnams</li>
+        <li>Kritis</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- VIDWAT -->
+<div class="content" style="display:none;">
+  <div class="card">
+    <div class="section-title" onclick="toggle(this)">🎵 Advanced Practice <span>▼</span></div>
+    <div class="section-content">
+      <ul>
+        <li>Alapana</li>
+        <li>Tanam</li>
+        <li>Kalpana Swaras</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function toggle(el) {
+  let content = el.nextElementSibling;
+  let arrow = el.querySelector("span");
+
+  if (content.style.display === "block") {
+    content.style.display = "none";
+    arrow.textContent = "▼";
+  } else {
+    content.style.display = "block";
+    arrow.textContent = "▲";
+  }
+}
+
+function switchTab(index) {
+  let tabs = document.querySelectorAll(".tab");
+  let contents = document.querySelectorAll(".content");
+
+  tabs.forEach(t => t.classList.remove("active"));
+  contents.forEach(c => c.style.display = "none");
+
+  tabs[index].classList.add("active");
+  contents[index].style.display = "block";
+}
+
+function searchContent(query) {
+  let items = document.querySelectorAll("li");
+  query = query.toLowerCase();
+
+  items.forEach(item => {
+    item.style.display = item.textContent.toLowerCase().includes(query)
+      ? "list-item"
+      : "none";
+  });
+}
+</script>
+
 </body>
 </html>

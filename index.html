@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="kn">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,6 +26,7 @@ button {
   border-radius:8px;
   background:#6366f1;
   color:white;
+  cursor:pointer;
 }
 
 .container {
@@ -52,15 +53,16 @@ button {
 
 .music {
   font-family:monospace;
-  border-left:4px solid #6366f1;
+  font-size:18px;
   padding:8px;
   margin:6px 0;
+  border-left:4px solid #6366f1;
 }
 
 .theory {
-  border-left:4px solid #10b981;
   padding:8px;
   margin:6px 0;
+  border-left:4px solid #10b981;
 }
 </style>
 </head>
@@ -78,158 +80,206 @@ button {
 
 <script>
 
-let lang="kn";
-const HIGH_SA="ಸ\u0307";
+// ================= CONFIG =================
+let lang = "kn";
+const HIGH_SA_KN = "ಸ\u0307";
+const HIGH_SA_EN = "Ṡ";
+
+// ================= CONVERSION =================
+function toKannada(text){
+  return text
+  .replace(/S/g,"ಸ")
+  .replace(/R1/g,"ರಿ₁")
+  .replace(/G3/g,"ಗ₃")
+  .replace(/M1/g,"ಮ₁")
+  .replace(/P/g,"ಪ")
+  .replace(/D1/g,"ದ₁")
+  .replace(/N3/g,"ನಿ₃")
+  .replace(/Ṡ/g,HIGH_SA_KN);
+}
 
 // ================= DATA =================
 
-const data = [
-
-{
-title:"🎵 ಸ್ವರಾವಳಿ",
-subsections:[
-{
-title:"ಸರಳಿ ವರಸೆಗಳು",
-children:[
-{title:"ಸರಳಿ 1",content:["ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ "+HIGH_SA+" ||",
-HIGH_SA+" ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"]},
-{title:"ಸರಳಿ 2",content:["ಸ ರಿ₁ ಸ ರಿ₁ | ಸ ರಿ₁ ಗ₃ ಮ₁ ||"]},
-{title:"ಸರಳಿ 3",content:["ಸ ರಿ₁ ಗ₃ ಸ | ರಿ₁ ಗ₃ ಸ ರಿ₁ ||"]},
-{title:"ಸರಳಿ 4",content:["ಸ ರಿ₁ ಗ₃ ಮ₁ | ಸ ರಿ₁ ಗ₃ ಮ₁ ||"]},
-{title:"ಸರಳಿ 5",content:["ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ "+HIGH_SA+" ರಿ₁ ಸ ||"]},
-{title:"ಸರಳಿ 6",content:["ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ಸ ರಿ₁ ||"]},
-{title:"ಸರಳಿ 7",content:["ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ ||"]},
-{title:"ಸರಳಿ 8",content:["ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ಮ₁ ಗ₃ ರಿ₁ ||"]}
+const saraliRaw = [
+[
+["S R G M","P D N Ṡ"],
+["Ṡ N D P","M G R S"]
+],
+[
+["S R S R","S R G M"],
+["S R G M","P D N Ṡ"],
+["Ṡ N Ṡ N","Ṡ N D P"],
+["Ṡ N D P","M G R S"]
+],
+[
+["S R G S","R G S R"],
+["S R G M","P D N Ṡ"],
+["Ṡ N D Ṡ","N D Ṡ N"],
+["Ṡ N D P","M G R S"]
+],
+[
+["S R G M","S R G M"],
+["S R G M","P D N Ṡ"],
+["Ṡ N D P","Ṡ N D P"],
+["Ṡ N D P","M G R S"]
+],
+[
+["S R G M","P Ṡ R S"],
+["S R G M","P D N Ṡ"],
+["Ṡ N D P","M Ṡ N"],
+["Ṡ N D P","M G R S"]
+],
+[
+["S R G M","P D S R"],
+["S R G M","P D N Ṡ"],
+["Ṡ N D P","M G Ṡ N"],
+["Ṡ N D P","M G R S"]
+],
+[
+["S R G M","P D N"],
+["S R G M","P D N Ṡ"],
+["Ṡ N D P","M G R"],
+["Ṡ N D P","M G R S"]
+],
+[
+["S R G M","P M G R"],
+["S R G M","P D N Ṡ"],
+["Ṡ N D P","M P D N"],
+["Ṡ N D P","M G R S"]
 ]
-},
-{
-title:"ಜಂಟಿ ವರಸೆಗಳು",
-content:"<div class='theory'>Coming next (validated from your sheet)</div>"
-},
-{
-title:"ದಾಟು ವರಸೆಗಳು",
-content:"<div class='theory'>Coming next</div>"
-},
-{
-title:"ಅಲಂಕಾರಗಳು",
-content:"<div class='theory'>Coming next</div>"
-}
-]
-},
-
-{
-title:"🎼 ಗೀತಗಳು",
-subsections:[
-{title:"ಲಕ್ಷಣ ಗೀತೆಗಳು",content:"<div class='theory'>To be added</div>"},
-{title:"ಸರಳ ಗೀತೆಗಳು",content:"<div class='theory'>To be added</div>"}
-]
-},
-
-{
-title:"🎼 ವರ್ಣಗಳು",
-subsections:[
-{title:"ತಾನ ವರ್ಣಗಳು",content:"<div class='theory'>To be added</div>"}
-]
-},
-
-{
-title:"🎼 ಮೇಳಕರ್ತ ರಾಗಗಳು",
-subsections:[
-{
-title:"ಮಾಯಾಮಾಳವಗೌಳ",
-content:`
-<div class="theory"><b>ಆರೋಹಣ:</b> ಸ ರಿ₁ ಗ₃ ಮ₁ ಪ ದ₁ ನಿ₃ ಸ̇</div>
-<div class="theory"><b>ಅವರೋಹಣ:</b> ಸ̇ ನಿ₃ ದ₁ ಪ ಮ₁ ಗ₃ ರಿ₁ ಸ</div>
-<div class="theory">
-ಸ್ವರಗಳು: ಸ ರಿ₁ ಗ₃ ಮ₁ ಪ ದ₁ ನಿ₃
-</div>
-`
-}
-]
-},
-
-{
-title:"📘 ಶಾಸ್ತ್ರ ಭಾಗ",
-subsections:[
-{
-title:"7 ಸ್ವರಗಳು",
-content:"<div class='theory'>ಸ ರಿ ಗ ಮ ಪ ದ ನಿ</div>"
-},
-{
-title:"12 ಸ್ವರಸ್ಥಾನಗಳು",
-content:"<div class='theory'>ರಿ₁ ರಿ₂ ಗ₁ ಗ₂ ಮ₁ ಮ₂ ದ₁ ದ₂ ನಿ₁ ನಿ₂ ...</div>"
-},
-{
-title:"ತಾಳ",
-content:"<div class='theory'>ಆದಿ ತಾಳ, ರೂಪಕ ತಾಳ</div>"
-},
-{
-title:"ರಾಗ ಲಕ್ಷಣ",
-content:"<div class='theory'>ರಾಗದ ಸ್ವರೂಪ ವಿವರಣೆ</div>"
-}
-]
-}
-
 ];
 
-// ================= RENDER =================
+// ================= BUILD =================
 
-const app=document.getElementById("app");
+function buildUI(){
 
-data.forEach(section=>{
-const card=createCard(section.title);
-const content=createContent();
+const app = document.getElementById("app");
+app.innerHTML = "";
 
-section.subsections.forEach(sub=>{
-const subCard=createSubCard(sub.title);
-const subContent=createContent();
+// ===== SWARAVALI =====
+const swara = createCard("🎵 ಸ್ವರಾವಳಿ");
+const swaraContent = createContent();
 
-if(sub.children){
-sub.children.forEach(c=>{
-subContent.innerHTML+=`<div class="music">${c.content.join("<br>")}</div>`;
+const saraliCard = createSubCard("ಸರಳಿ ವರಸೆಗಳು");
+const saraliContent = createContent();
+
+saraliRaw.forEach((lesson, i)=>{
+
+  const lessonCard = createSubCard(`ಸರಳಿ ${i+1}`);
+  const lessonContent = createContent();
+
+  lesson.forEach(line=>{
+    let text = line.join(" | ") + " ||";
+
+    if(lang==="kn") text = toKannada(text);
+
+    lessonContent.innerHTML += `<div class="music">${text}</div>`;
+  });
+
+  attachToggle(lessonCard, lessonContent);
+  saraliContent.append(lessonCard, lessonContent);
 });
-}else{
-subContent.innerHTML=sub.content;
+
+attachToggle(saraliCard, saraliContent);
+swaraContent.append(saraliCard, saraliContent);
+
+// placeholders
+swaraContent.append(createPlaceholder("ಜಂಟಿ ವರಸೆಗಳು"));
+swaraContent.append(createPlaceholder("ದಾಟು ವರಸೆಗಳು"));
+swaraContent.append(createPlaceholder("ಅಲಂಕಾರಗಳು"));
+
+attachToggle(swara.card, swaraContent);
+
+// ===== RAGA =====
+const raga = createCard("🎼 ಮೇಳಕರ್ತ ರಾಗಗಳು");
+const ragaContent = createContent();
+
+const mmgCard = createSubCard("ಮಾಯಾಮಾಳವಗೌಳ");
+const mmgContent = createContent();
+
+let aro = "S R1 G3 M1 P D1 N3 Ṡ";
+let ava = "Ṡ N3 D1 P M1 G3 R1 S";
+
+if(lang==="kn"){
+  aro = toKannada(aro);
+  ava = toKannada(ava);
 }
 
-attachToggle(subCard,subContent);
-content.append(subCard,subContent);
-});
+mmgContent.innerHTML = `
+<div class="theory"><b>ಆರೋಹಣ:</b> ${aro}</div>
+<div class="theory"><b>ಅವರೋಹಣ:</b> ${ava}</div>
+<div class="theory">ಸ್ವರಗಳು: ${lang==="kn" ? "ಸ ರಿ₁ ಗ₃ ಮ₁ ಪ ದ₁ ನಿ₃" : "S R1 G3 M1 P D1 N3"}</div>
+`;
 
-attachToggle(card,content);
-app.append(card,content);
-});
+attachToggle(mmgCard, mmgContent);
+ragaContent.append(mmgCard, mmgContent);
+
+attachToggle(raga.card, ragaContent);
+
+// ===== THEORY =====
+const theory = createCard("📘 ಶಾಸ್ತ್ರ ಭಾಗ");
+const theoryContent = createContent();
+
+theoryContent.innerHTML = `
+<div class="theory">7 Swaras: ${lang==="kn"?"ಸ ರಿ ಗ ಮ ಪ ದ ನಿ":"S R G M P D N"}</div>
+<div class="theory">12 Swarasthanas</div>
+`;
+
+attachToggle(theory.card, theoryContent);
+
+// ===== APPEND =====
+app.append(
+  swara.card, swaraContent,
+  raga.card, ragaContent,
+  theory.card, theoryContent
+);
+}
 
 // ================= HELPERS =================
 
-function createCard(t){
-const d=document.createElement("div");
-d.className="card";
-d.innerHTML=t+" <span>▼</span>";
-return d;
+function createCard(title){
+  const card = document.createElement("div");
+  card.className="card";
+  card.innerHTML=title+" <span>▼</span>";
+  return {card};
 }
 
-function createSubCard(t){
-const d=document.createElement("div");
-d.className="sub-card";
-d.innerHTML=t+" <span>▶</span>";
-return d;
+function createSubCard(title){
+  const d=document.createElement("div");
+  d.className="sub-card";
+  d.innerHTML=title+" <span>▶</span>";
+  return d;
 }
 
 function createContent(){
-const d=document.createElement("div");
-d.className="content";
-return d;
+  const d=document.createElement("div");
+  d.className="content";
+  return d;
+}
+
+function createPlaceholder(title){
+  const c = createSubCard(title);
+  const ct = createContent();
+  ct.innerHTML = "<div class='theory'>Coming next</div>";
+  attachToggle(c, ct);
+  return [c, ct];
 }
 
 function attachToggle(c,ct){
-c.onclick=(e)=>{
-e.stopPropagation();
-ct.style.display=ct.style.display==="block"?"none":"block";
-};
+  c.onclick=(e)=>{
+    e.stopPropagation();
+    ct.style.display = ct.style.display==="block"?"none":"block";
+  };
 }
 
-function setLang(l){ lang=l; }
+// ================= LANG =================
+function setLang(l){
+  lang=l;
+  buildUI();
+}
+
+// INIT
+buildUI();
 
 </script>
 

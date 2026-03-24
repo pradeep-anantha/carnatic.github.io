@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="kn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,35 +7,24 @@
 
 <style>
 body {
-  font-family: "Noto Sans Kannada", "Segoe UI", sans-serif;
+  font-family: "Noto Sans Kannada", sans-serif;
   background: #f1f5f9;
   margin: 0;
   padding: 20px;
-  color: #1e293b;
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 10px;
-}
+h1 { text-align: center; }
 
-.toggle {
-  text-align: center;
-  margin-bottom: 20px;
-}
+.toggle { text-align:center; margin-bottom:15px; }
 
 button {
-  padding: 8px 14px;
+  padding: 8px 12px;
   margin: 5px;
   border: none;
   border-radius: 8px;
   background: #6366f1;
   color: white;
   cursor: pointer;
-}
-
-button:hover {
-  background: #4f46e5;
 }
 
 .container {
@@ -53,29 +42,31 @@ button:hover {
   justify-content: space-between;
 }
 
-.sub-card {
-  background: #f8fafc;
-}
+.sub-card { background:#f8fafc; }
 
 .content {
-  display: none;
-  padding: 10px;
+  display:none;
+  padding:10px;
 }
 
 .music {
-  background: #fff;
-  padding: 10px;
-  margin: 6px 0;
-  border-left: 4px solid #6366f1;
   font-family: monospace;
-  font-size: 18px;
+  padding:8px;
+  border-left:4px solid #6366f1;
+  margin-bottom:6px;
+}
+
+.theory {
+  padding:8px;
+  border-left:4px solid #10b981;
+  margin-bottom:6px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🎶 Carnatic Music Learning</h1>
+<h1>🎶 Carnatic Learning</h1>
 
 <div class="toggle">
   <button onclick="setLang('kn')">ಕನ್ನಡ</button>
@@ -86,133 +77,148 @@ button:hover {
 
 <script>
 
-let currentLang = "kn";
+let lang = "kn";
 const HIGH_SA_KN = "ಸ\u0307";
 const HIGH_SA_EN = "Ṡ";
 
-// ================= SARALI DATA =================
-const saraliRaw = [
-  [
-    ["S R G M", "P D N Ṡ"],
-    ["Ṡ N D P", "M G R S"]
-  ],
-  [
-    ["S R S R", "S R G M"],
-    ["S R G M", "P D N Ṡ"],
-    ["Ṡ N Ṡ N", "Ṡ N D P"],
-    ["Ṡ N D P", "M G R S"]
-  ],
-  [
-    ["S R G S", "R G S R"],
-    ["S R G M", "P D N Ṡ"],
-    ["Ṡ N D Ṡ", "N D Ṡ N"],
-    ["Ṡ N D P", "M G R S"]
-  ],
-  [
-    ["S R G M", "S R G M"],
-    ["S R G M", "P D N Ṡ"],
-    ["Ṡ N D P", "Ṡ N D P"],
-    ["Ṡ N D P", "M G R S"]
-  ],
-  [
-    ["S R G M", "P Ṡ R S"],
-    ["S R G M", "P D N Ṡ"],
-    ["Ṡ N D P", "M Ṡ N"],
-    ["Ṡ N D P", "M G R S"]
-  ],
-  [
-    ["S R G M", "P D S R"],
-    ["S R G M", "P D N Ṡ"],
-    ["Ṡ N D P", "M G Ṡ N"],
-    ["Ṡ N D P", "M G R S"]
-  ],
-  [
-    ["S R G M", "P D N"],
-    ["S R G M", "P D N Ṡ"],
-    ["Ṡ N D P", "M G R"],
-    ["Ṡ N D P", "M G R S"]
-  ],
-  [
-    ["S R G M", "P M G R"],
-    ["S R G M", "P D N Ṡ"],
-    ["Ṡ N D P", "M P D N"],
-    ["Ṡ N D P", "M G R S"]
-  ]
+// ================= SARALI =================
+const sarali = [
+["S R G M","P D N Ṡ"],
+["Ṡ N D P","M G R S"]
 ];
 
-// ================= CONVERSION =================
+// ================= RAGA =================
+const raga = {
+name: {
+  kn: "ಮಾಯಾಮಾಳವಗೌಳ",
+  en: "Mayamalavagowla"
+},
+arohana: "S R1 G3 M1 P D1 N3 Ṡ",
+avarohana: "Ṡ N3 D1 P M1 G3 R1 S",
+swaras: [
+"Shadjam (S)",
+"R1 - Shuddha Rishabham",
+"G3 - Antara Gandharam",
+"M1 - Shuddha Madhyamam",
+"P - Panchamam",
+"D1 - Shuddha Daivatam",
+"N3 - Kakali Nishadam"
+],
+notes: "Fundamental beginner raga used for Sarali, Janti"
+};
 
-function toKannada(line) {
-  return line
-    .replace(/S/g, "ಸ")
-    .replace(/R/g, "ರಿ₁")
-    .replace(/G/g, "ಗ₃")
-    .replace(/M/g, "ಮ₁")
-    .replace(/P/g, "ಪ")
-    .replace(/D/g, "ದ₁")
-    .replace(/N/g, "ನಿ₃")
-    .replace(/Ṡ/g, HIGH_SA_KN);
+// ================= CONVERT =================
+function toKannada(text){
+  return text
+  .replace(/S/g,"ಸ")
+  .replace(/R1/g,"ರಿ₁")
+  .replace(/G3/g,"ಗ₃")
+  .replace(/M1/g,"ಮ₁")
+  .replace(/P/g,"ಪ")
+  .replace(/D1/g,"ದ₁")
+  .replace(/N3/g,"ನಿ₃")
+  .replace(/Ṡ/g,HIGH_SA_KN);
 }
 
-function toEnglish(line) {
-  return line.replace(/Ṡ/g, HIGH_SA_EN);
+// ================= UI =================
+function buildUI(){
+
+const app = document.getElementById("app");
+app.innerHTML="";
+
+// ===== SWARAVALI =====
+const swaraCard = createCard("🎵 ಸ್ವರಾವಳಿ");
+
+const saraliCard = createSubCard("ಸರಳಿ ವರಸೆಗಳು");
+const saraliContent = createContent();
+
+sarali.forEach(l=>{
+  let line = l.join(" | ") + " ||";
+  if(lang==="kn") line = toKannada(line);
+  saraliContent.innerHTML += `<div class="music">${line}</div>`;
+});
+
+attachToggle(saraliCard, saraliContent);
+swaraCard.content.append(saraliCard, saraliContent);
+
+// ===== RAGA =====
+const ragaCard = createCard("🎼 ಮೇಳಕರ್ತ ರಾಗಗಳು");
+
+const mmgCard = createSubCard(raga.name[lang]);
+const mmgContent = createContent();
+
+let aro = lang==="kn" ? toKannada(raga.arohana) : raga.arohana;
+let ava = lang==="kn" ? toKannada(raga.avarohana) : raga.avarohana;
+
+mmgContent.innerHTML = `
+<div class="theory"><b>ಆರೋಹಣ:</b> ${aro}</div>
+<div class="theory"><b>ಅವರೋಹಣ:</b> ${ava}</div>
+<div class="theory"><b>ಸ್ವರಸ್ಥಾನಗಳು:</b><br>${raga.swaras.join("<br>")}</div>
+<div class="theory">${raga.notes}</div>
+`;
+
+attachToggle(mmgCard, mmgContent);
+ragaCard.content.append(mmgCard, mmgContent);
+
+// ===== THEORY =====
+const theoryCard = createCard("📘 ಶಾಸ್ತ್ರ ಭಾಗ");
+
+const swaraTheory = createSubCard("7 ಸ್ವರಗಳು");
+const swaraContent = createContent();
+
+swaraContent.innerHTML = `
+<div class="theory">
+ಸ ರಿ ಗ ಮ ಪ ದ ನಿ
+</div>
+`;
+
+attachToggle(swaraTheory, swaraContent);
+theoryCard.content.append(swaraTheory, swaraContent);
+
+// ===== APPEND =====
+app.append(
+  swaraCard.card, swaraCard.content,
+  ragaCard.card, ragaCard.content,
+  theoryCard.card, theoryCard.content
+);
 }
 
-// ================= BUILD UI =================
+// ===== HELPERS =====
+function createCard(title){
+  const card=document.createElement("div");
+  card.className="card";
+  card.innerHTML=title+" <span>▼</span>";
 
-function buildUI() {
-  const app = document.getElementById("app");
-  app.innerHTML = "";
+  const content=createContent();
+  attachToggle(card,content);
 
-  const mainCard = document.createElement("div");
-  mainCard.className = "card";
-  mainCard.innerHTML = "🎵 ಸ್ವರಾವಳಿ <span>▼</span>";
+  return {card,content};
+}
 
-  const mainContent = document.createElement("div");
-  mainContent.className = "content";
+function createSubCard(title){
+  const card=document.createElement("div");
+  card.className="sub-card";
+  card.innerHTML=title+" <span>▶</span>";
+  return card;
+}
 
-  saraliRaw.forEach((lesson, index) => {
+function createContent(){
+  const div=document.createElement("div");
+  div.className="content";
+  return div;
+}
 
-    const subCard = document.createElement("div");
-    subCard.className = "sub-card";
-    subCard.innerHTML = `ಸರಳಿ ${index+1} <span>▶</span>`;
-
-    const subContent = document.createElement("div");
-    subContent.className = "content";
-
-    lesson.forEach(line => {
-
-      let text = line.join(" | ") + " ||";
-
-      if (currentLang === "kn") text = toKannada(text);
-      else text = toEnglish(text);
-
-      subContent.innerHTML += `<div class="music">${text}</div>`;
-    });
-
-    subCard.onclick = (e) => {
-      e.stopPropagation();
-      subContent.style.display =
-        subContent.style.display === "block" ? "none" : "block";
-    };
-
-    mainContent.appendChild(subCard);
-    mainContent.appendChild(subContent);
-  });
-
-  mainCard.onclick = () => {
-    mainContent.style.display =
-      mainContent.style.display === "block" ? "none" : "block";
+function attachToggle(card,content){
+  card.onclick=(e)=>{
+    e.stopPropagation();
+    content.style.display =
+      content.style.display==="block"?"none":"block";
   };
-
-  app.appendChild(mainCard);
-  app.appendChild(mainContent);
 }
 
-// ================= TOGGLE =================
-
-function setLang(lang) {
-  currentLang = lang;
+// ===== LANGUAGE =====
+function setLang(l){
+  lang=l;
   buildUI();
 }
 

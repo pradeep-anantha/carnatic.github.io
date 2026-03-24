@@ -1,142 +1,158 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ಪ್ರಾಥಮಿಕ ಹಂತ - ಶ್ರೇಣಿ ಪತ್ರಿಕೆ</title>
+
+<style>
+body {
+  font-family: "Noto Sans Kannada", Arial;
+  background: #f3f4f6;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+.container {
+  max-width: 800px;
+  margin: auto;
+}
+
+/* Level 1 */
+.card {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Level 2 */
+.sub-card {
+  background: #f9fafb;
+  padding: 12px;
+  border-radius: 10px;
+  margin: 8px 0;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Content */
+.content {
+  display: none;
+  padding: 10px 15px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎶 ಪ್ರಾಥಮಿಕ ಹಂತ - ಶ್ರೇಣಿ ಪತ್ರಿಕೆ</h1>
+
+<div id="app" class="container"></div>
+
 <script>
-// ================= HELPERS =================
+document.addEventListener("DOMContentLoaded", function () {
 
-// safe high Sa (dot above)
-const HIGH_SA = "ಸ\u0307";
+  const HIGH_SA = "ಸ\u0307";
 
-// ================= DATA =================
+  const saraliData = [
+    {
+      title: "ಸರಳಿ 1",
+      lines: [
+        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
+        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
+      ]
+    },
+    {
+      title: "ಸರಳಿ 2",
+      lines: [
+        "ಸ ರಿ₁ ಸ ರಿ₁ | ಸ ರಿ₁ ಗ₃ ಮ₁ ||",
+        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
+        HIGH_SA + " ನಿ₃ " + HIGH_SA + " ನಿ₃ | " + HIGH_SA + " ನಿ₃ ದ₁ ಪ ||",
+        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
+      ]
+    },
+    {
+      title: "ಸರಳಿ 3",
+      lines: [
+        "ಸ ರಿ₁ ಗ₃ ಸ | ರಿ₁ ಗ₃ ಸ ರಿ₁ ||",
+        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
+        HIGH_SA + " ನಿ₃ ದ₁ " + HIGH_SA + " | ನಿ₃ ದ₁ " + HIGH_SA + " ನಿ₃ ||",
+        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
+      ]
+    },
+    {
+      title: "ಸರಳಿ 4",
+      lines: [
+        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಸ ರಿ₁ ಗ₃ ಮ₁ ||",
+        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
+        HIGH_SA + " ನಿ₃ ದ₁ ಪ | " + HIGH_SA + " ನಿ₃ ದ₁ ಪ ||",
+        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
+      ]
+    },
+    {
+      title: "ಸರಳಿ 5",
+      lines: [
+        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ " + HIGH_SA + " ರಿ₁ ಸ ||",
+        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
+        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ " + HIGH_SA + " ನಿ₃ ||",
+        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
+      ]
+    },
+    {
+      title: "ಸರಳಿ 6",
+      lines: [
+        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ಸ ರಿ₁ ||",
+        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
+        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ " + HIGH_SA + " ನಿ₃ ||",
+        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
+      ]
+    },
+    {
+      title: "ಸರಳಿ 7",
+      lines: [
+        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ ~ ||",
+        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
+        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ~ ||",
+        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
+      ]
+    },
+    {
+      title: "ಸರಳಿ 8",
+      lines: [
+        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ಮ₁ ಗ₃ ರಿ₁ ||",
+        "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
+        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಪ ದ₁ ನಿ₃ ||",
+        HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
+      ]
+    }
+  ];
 
-const saraliData = [
-  {
-    title: "ಸರಳಿ 1",
-    lines: [
-      "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-      HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-    ]
-  },
-  {
-    title: "ಸರಳಿ 2",
-    lines: [
-      "ಸ ರಿ₁ ಸ ರಿ₁ | ಸ ರಿ₁ ಗ₃ ಮ₁ ||",
-      "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-      HIGH_SA + " ನಿ₃ " + HIGH_SA + " ನಿ₃ | " + HIGH_SA + " ನಿ₃ ದ₁ ಪ ||",
-      HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-    ]
-  },
-  {
-    title: "ಸರಳಿ 3",
-    lines: [
-      "ಸ ರಿ₁ ಗ₃ ಸ | ರಿ₁ ಗ₃ ಸ ರಿ₁ ||",
-      "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-      HIGH_SA + " ನಿ₃ ದ₁ " + HIGH_SA + " | ನಿ₃ ದ₁ " + HIGH_SA + " ನಿ₃ ||",
-      HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-    ]
-  },
-  {
-    title: "ಸರಳಿ 4",
-    lines: [
-      "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಸ ರಿ₁ ಗ₃ ಮ₁ ||",
-      "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-      HIGH_SA + " ನಿ₃ ದ₁ ಪ | " + HIGH_SA + " ನಿ₃ ದ₁ ಪ ||",
-      HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-    ]
-  },
-  {
-    title: "ಸರಳಿ 5",
-    lines: [
-      "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ " + HIGH_SA + " ರಿ₁ ಸ ||",
-      "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-      HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ " + HIGH_SA + " ನಿ₃ ||",
-      HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-    ]
-  },
-  {
-    title: "ಸರಳಿ 6",
-    lines: [
-      "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ಸ ರಿ₁ ||",
-      "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-      HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ " + HIGH_SA + " ನಿ₃ ||",
-      HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-    ]
-  },
-  {
-    title: "ಸರಳಿ 7",
-    lines: [
-      "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ ~ ||",
-      "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-      HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ~ ||",
-      HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-    ]
-  },
-  {
-    title: "ಸರಳಿ 8",
-    lines: [
-      "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ಮ₁ ಗ₃ ರಿ₁ ||",
-      "ಸ ರಿ₁ ಗ₃ ಮ₁ | ಪ ದ₁ ನಿ₃ " + HIGH_SA + " ||",
-      HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಪ ದ₁ ನಿ₃ ||",
-      HIGH_SA + " ನಿ₃ ದ₁ ಪ | ಮ₁ ಗ₃ ರಿ₁ ಸ ||"
-    ]
-  }
-];
+  const app = document.getElementById("app");
 
-// ================= MAIN DATA =================
+  const mainCard = document.createElement("div");
+  mainCard.className = "card";
+  mainCard.innerHTML = "🎵 ಸರಳಿ ವರಸೆಗಳು <span>▼</span>";
 
-const data = [
-  {
-    title: "🎵 ಪ್ರಾಯೋಗಿಕ ಪತ್ರಿಕೆ - 1",
-    subsections: [
-      {
-        title: "ಸರಳಿ ವರಸೆಗಳು",
-        children: saraliData.map(sarali => ({
-          title: sarali.title,
-          content: sarali.lines.map(l => `<div>${l}</div>`).join("")
-        }))
-      }
-    ]
-  }
-];
+  const mainContent = document.createElement("div");
+  mainContent.className = "content";
 
-// ================= RENDER =================
-
-const app = document.getElementById("app");
-
-data.forEach(section => {
-  const card = document.createElement("div");
-  card.className = "card";
-  card.innerHTML = `${section.title} <span>▼</span>`;
-
-  const content = document.createElement("div");
-  content.className = "content";
-
-  section.subsections.forEach(sub => {
-
+  saraliData.forEach(sarali => {
     const subCard = document.createElement("div");
     subCard.className = "sub-card";
-    subCard.innerHTML = `${sub.title} <span>▶</span>`;
+    subCard.innerHTML = `${sarali.title} <span>▶</span>`;
 
     const subContent = document.createElement("div");
     subContent.className = "content";
 
-    sub.children.forEach(child => {
-      const childCard = document.createElement("div");
-      childCard.className = "sub-card";
-      childCard.style.marginLeft = "15px";
-      childCard.innerHTML = `${child.title} <span>▶</span>`;
-
-      const childContent = document.createElement("div");
-      childContent.className = "content";
-      childContent.style.marginLeft = "20px";
-      childContent.innerHTML = child.content;
-
-      childCard.onclick = (e) => {
-        e.stopPropagation();
-        childContent.style.display =
-          childContent.style.display === "block" ? "none" : "block";
-      };
-
-      subContent.appendChild(childCard);
-      subContent.appendChild(childContent);
-    });
+    subContent.innerHTML = sarali.lines.map(l => `<div>${l}</div>`).join("");
 
     subCard.onclick = (e) => {
       e.stopPropagation();
@@ -144,16 +160,20 @@ data.forEach(section => {
         subContent.style.display === "block" ? "none" : "block";
     };
 
-    content.appendChild(subCard);
-    content.appendChild(subContent);
+    mainContent.appendChild(subCard);
+    mainContent.appendChild(subContent);
   });
 
-  card.onclick = () => {
-    content.style.display =
-      content.style.display === "block" ? "none" : "block";
+  mainCard.onclick = () => {
+    mainContent.style.display =
+      mainContent.style.display === "block" ? "none" : "block";
   };
 
-  app.appendChild(card);
-  app.appendChild(content);
+  app.appendChild(mainCard);
+  app.appendChild(mainContent);
+
 });
 </script>
+
+</body>
+</html>

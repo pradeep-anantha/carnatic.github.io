@@ -3,200 +3,214 @@
 <head>
 <meta charset="UTF-8">
 <title>Carnatic Flute Syllabus</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 body {
-  font-family: Arial;
-  margin: 0;
-  background: #f5f6fa;
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background: #f5f5f5;
 }
 
-.header {
-  padding: 15px;
+h2 {
+  margin-bottom: 10px;
+}
+
+button {
+  margin: 4px;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
   background: white;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.tabs button {
-  margin: 5px;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 20px;
-  background: #ddd;
   cursor: pointer;
 }
 
-.tabs button.active {
-  background: #4CAF50;
-  color: white;
+button:hover {
+  background: #eee;
 }
 
 .container {
-  padding: 15px;
+  margin-top: 15px;
 }
 
 .card {
   background: white;
   padding: 10px;
   margin-bottom: 10px;
-  border-radius: 8px;
-}
-
-.category {
-  font-weight: bold;
-  margin-bottom: 5px;
+  border: 1px solid #ddd;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <h2>🎶 Carnatic Flute Syllabus</h2>
+<h2>Carnatic Flute Syllabus</h2>
 
-  <div id="levels" class="tabs"></div>
-  <div id="sections" class="tabs"></div>
-</div>
+<div id="status">Loading...</div>
+
+<div id="levels"></div>
+<div id="sections"></div>
 
 <div id="content" class="container"></div>
 
-<script>
+<script type="module">
 
-const supabase = window.supabase.createClient(
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const supabase = createClient(
   "https://jlnyecsqjdphgsaabyja.supabase.co",
   "sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk"
 );
 
+const statusDiv = document.getElementById("status");
+const levelsDiv = document.getElementById("levels");
+const sectionsDiv = document.getElementById("sections");
+const contentDiv = document.getElementById("content");
+
 let categoriesMap = {};
 let subcategoriesMap = {};
 
-// =====================
+// =======================
 // INIT
-// =====================
+// =======================
 async function init() {
 
-  // preload categories
-  const { data: categories } = await supabase.from('categories').select('*');
-  categories.forEach(c => categoriesMap[c.id] = c.name);
+  try {
 
-  const { data: subcategories } = await supabase.from('subcategories').select('*');
-  subcategories.forEach(s => subcategoriesMap[s.id] = s.name);
+    statusDiv.innerText = "Loading data...";
 
-  // load levels
-  const { data: levels } = await supabase.from('levels').select('*');
+    // Load categories
+    const catRes = await supabase.from('categories').select('*');
+    if (catRes.data) {
+      catRes.data.forEach(c => {
+        categoriesMap[c.id] = c.name;
+      });
+    }
 
-  const levelDiv = document.getElementById('levels');
+    // Load subcategories
+    const subRes = await supabase.from('subcategories').select('*');
+    if (subRes.data) {
+      subRes.data.forEach(s => {
+        subcategoriesMap[s.id] = s.name;
+      });
+    }
 
-  levels.forEach((l, i) => {
-    const btn = document.createElement('button');
-    btn.innerText = l.name;
-    btn.onclick = () => loadSections(l, btn);
-    levelDiv.appendChild(btn);
+    // Load levels
+    const { data: levels, error } = await supabase
+      .from('levels')
+      .select('*');
 
-    if (i === 0) loadSections(l, btn);
-  });
+    if (error) {
+      statusDiv.innerText = "Error loading levels";
+      return;
+    }
+
+    levelsDiv.innerHTML = "";
+
+    levels.forEach(level => {
+      const btn = document.createElement("button");
+      btn.innerText = level.name;
+
+      btn.onclick = () => loadSections(level.id);
+
+      levelsDiv.appendChild(btn);
+    });
+
+    statusDiv.innerText = "Ready";
+
+  } catch (err) {
+    statusDiv.innerText = "Error: " + err.message;
+  }
 }
 
-// =====================
+// =======================
 // LOAD SECTIONS
-// =====================
-async function loadSections(level, btn) {
+// =======================
+async function loadSections(levelId) {
 
-  setActive('levels', btn);
+  sectionsDiv.innerHTML = "";
+  contentDiv.innerHTML = "";
 
   const { data: sections } = await supabase
     .from('sections')
     .select('*')
-    .eq('level_id', level.id);
+    .eq('level_id', levelId);
 
-  const sectionDiv = document.getElementById('sections');
-  sectionDiv.innerHTML = '';
+  if (!sections) {
+    statusDiv.innerText = "No sections found";
+    return;
+  }
 
-  sections.forEach((s, i) => {
-    const b = document.createElement('button');
-    b.innerText = s.name;
-    b.onclick = () => loadSyllabus(s, b);
-    sectionDiv.appendChild(b);
+  sections.forEach(section => {
+    const btn = document.createElement("button");
+    btn.innerText = section.name;
 
-    if (i === 0) loadSyllabus(s, b);
+    btn.onclick = () => loadSyllabus(section.id);
+
+    sectionsDiv.appendChild(btn);
   });
 }
 
-// =====================
+// =======================
 // LOAD SYLLABUS
-// =====================
-async function loadSyllabus(section, btn) {
+// =======================
+async function loadSyllabus(sectionId) {
 
-  setActive('sections', btn);
+  contentDiv.innerHTML = "";
 
-  const { data } = await supabase
+  const { data: syllabus } = await supabase
     .from('syllabus')
     .select('*')
-    .eq('section_id', section.id);
+    .eq('section_id', sectionId);
 
-  render(data);
-}
-
-// =====================
-// RENDER
-// =====================
-function render(data) {
-
-  const container = document.getElementById('content');
-  container.innerHTML = '';
+  if (!syllabus) {
+    statusDiv.innerText = "No syllabus data";
+    return;
+  }
 
   const grouped = {};
 
-  data.forEach(item => {
-    const cat = categoriesMap[item.category_id] || 'Other';
+  syllabus.forEach(item => {
+    const category = categoriesMap[item.category_id] || "Other";
 
-    if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push(item);
+    if (!grouped[category]) {
+      grouped[category] = [];
+    }
+
+    grouped[category].push(item);
   });
 
-  Object.keys(grouped).forEach(cat => {
+  Object.keys(grouped).forEach(category => {
 
-    const card = document.createElement('div');
-    card.className = 'card';
+    const card = document.createElement("div");
+    card.className = "card";
 
-    const title = document.createElement('div');
-    title.className = 'category';
-    title.innerText = cat;
+    const title = document.createElement("div");
+    title.style.fontWeight = "bold";
+    title.innerText = category;
 
     card.appendChild(title);
 
-    grouped[cat].forEach(item => {
+    grouped[category].forEach(item => {
 
-      const div = document.createElement('div');
+      const row = document.createElement("div");
 
-      let text = '';
+      let text = "";
 
-      if (item.subcategory_id) {
-        text += subcategoriesMap[item.subcategory_id] + ': ';
+      if (item.subcategory_id && subcategoriesMap[item.subcategory_id]) {
+        text += subcategoriesMap[item.subcategory_id] + ": ";
       }
 
-      text += item.value;
+      text += item.value || "";
 
       if (item.notes) {
-        text += ` (${item.notes})`;
+        text += " (" + item.notes + ")";
       }
 
-      div.innerText = text;
-      card.appendChild(div);
+      row.innerText = text;
+      card.appendChild(row);
     });
 
-    container.appendChild(card);
+    contentDiv.appendChild(card);
   });
-}
-
-// =====================
-// ACTIVE TAB
-// =====================
-function setActive(id, btn) {
-  const parent = document.getElementById(id);
-  Array.from(parent.children).forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
 }
 
 // START

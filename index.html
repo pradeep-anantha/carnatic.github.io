@@ -1,58 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Carnatic Learning</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carnatic Learning</title>
 
-<!-- Correct Supabase UMD -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: #e2e8f0;
-}
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #e2e8f0;
+        }
 
-.header {
-  padding: 20px;
-  text-align: center;
-  font-size: 24px;
-  background: #6366f1;
-  color: white;
-}
+        .header {
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            background: #6366f1;
+            color: white;
+        }
 
-.container {
-  max-width: 900px;
-  margin: auto;
-  padding: 20px;
-}
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
 
-.card, .sub-card {
-  background: rgba(255,255,255,0.08);
-  padding: 12px;
-  margin-bottom: 10px;
-  border-radius: 10px;
-  cursor: pointer;
-}
+        .card, .sub-card {
+            background: rgba(255,255,255,0.08);
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
 
-.card { font-weight: bold; }
-.sub-card { margin-left: 10px; }
+        .card { font-weight: bold; }
+        .sub-card { margin-left: 10px; }
 
-.content {
-  display: none;
-  margin-left: 15px;
-}
+        .content {
+            display: none;
+            margin-left: 15px;
+        }
 
-.lesson {
-  padding: 6px;
-  margin: 4px 0;
-  background: rgba(255,255,255,0.05);
-  border-radius: 6px;
-}
-</style>
+        .lesson {
+            padding: 6px;
+            margin: 4px 0;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+        }
+
+        .toggle-bar button {
+            margin-right: 10px;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 
 <body>
@@ -62,118 +67,168 @@ body {
 
 <script>
 
-// ================= CONFIG =================
-// 🔴 REPLACE THESE WIhttps://jlnyecsqjdphgsaabyja.supabase.co
-const SUPABASE_URL = "https://jlnyecsqjdphgsaabyja.supabase.co";
-const SUPABASE_KEY = "sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk";
+    window.onload = function () {
 
-// ================= INIT =================
-const app = document.getElementById("app");
+        const SUPABASE_URL = "https://jlnyecsqjdphgsaabyja.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk";
 
-function showError(msg) {
-  app.innerHTML = "<b>Error:</b> " + msg;
-}
+        const app = document.getElementById("app");
 
-function createDiv(className, text) {
-  const d = document.createElement("div");
-  d.className = className;
-  d.innerText = text;
-  return d;
-}
+        let lang = "kn";
+        let appData = null;
 
-function toggle(card, content) {
-  card.onclick = () => {
-    content.style.display =
-      content.style.display === "block" ? "none" : "block";
-  };
-}
+// ===== SAFE NAME =====
+        function getName(obj, type) {
 
-// ================= MAIN =================
-async function loadApp() {
+            if (type === "level") {
+                return lang === "kn"
+                    ? (obj.name_kn || "ಜೂನಿಯರ್")
+                    : (obj.name_en || "Junior");
+            }
 
-  try {
+            return lang === "kn"
+                ? (obj.name_kn || obj.name)
+                : (obj.name_en || obj.name);
+        }
 
-    // Check library
-    if (!window.supabase) {
-      showError("Supabase library not loaded");
-      return;
-    }
+// ===== UI HELPERS =====
+        function createDiv(cls, text) {
+            const d = document.createElement("div");
+            d.className = cls;
+            d.innerText = text;
+            return d;
+        }
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        function toggle(card, content) {
+            card.onclick = () => {
+                content.style.display =
+                    content.style.display === "block" ? "none" : "block";
+            };
+        }
 
-    app.innerText = "Loading data...";
+// ===== MAIN RENDER =====
+        function render() {
 
-    // Fetch all
-    const { data: levels, error: e1 } = await supabase.from("levels").select("*");
-    if (e1) throw e1;
+            if (!appData) return;
 
-    const { data: sections, error: e2 } = await supabase.from("sections").select("*");
-    if (e2) throw e2;
+            // FULL RESET
+            app.innerHTML = "";
 
-    const { data: topics, error: e3 } = await supabase.from("topics").select("*");
-    if (e3) throw e3;
+            // ===== TOGGLE BAR =====
+            const bar = document.createElement("div");
+            bar.style.marginBottom = "15px";
 
-    const { data: lessons, error: e4 } = await supabase.from("lessons").select("*");
-    if (e4) throw e4;
+            const knBtn = document.createElement("button");
+            knBtn.innerText = "ಕನ್ನಡ";
 
-    if (!levels || levels.length === 0) {
-      showError("No data found in levels table");
-      return;
-    }
+            const enBtn = document.createElement("button");
+            enBtn.innerText = "English";
 
-    app.innerHTML = "";
-
-    // Build UI
-    levels.forEach(level => {
-
-      const levelCard = createDiv("card", level.name);
-      const levelContent = createDiv("content", "");
-
-      sections
-        .filter(s => s.level_id === level.id)
-        .forEach(section => {
-
-          const sectionCard = createDiv("sub-card", section.name);
-          const sectionContent = createDiv("content", "");
-
-          topics
-            .filter(t => t.section_id === section.id)
-            .forEach(topic => {
-
-              const topicCard = createDiv("sub-card", topic.name);
-              const topicContent = createDiv("content", "");
-
-              lessons
-                .filter(l => l.topic_id === topic.id)
-                .forEach(lesson => {
-
-                  const lessonDiv = createDiv("lesson", lesson.name);
-                  topicContent.appendChild(lessonDiv);
-                });
-
-              toggle(topicCard, topicContent);
-              sectionContent.appendChild(topicCard);
-              sectionContent.appendChild(topicContent);
+            // CRITICAL: force re-render
+            knBtn.addEventListener("click", () => {
+                lang = "kn";
+                render();
             });
 
-          toggle(sectionCard, sectionContent);
-          levelContent.appendChild(sectionCard);
-          levelContent.appendChild(sectionContent);
-        });
+            enBtn.addEventListener("click", () => {
+                lang = "en";
+                render();
+            });
 
-      toggle(levelCard, levelContent);
-      app.appendChild(levelCard);
-      app.appendChild(levelContent);
-    });
+            bar.appendChild(knBtn);
+            bar.appendChild(enBtn);
+            app.appendChild(bar);
 
-  } catch (err) {
-    console.error(err);
-    showError(err.message);
-  }
-}
+            const { levels, sections, topics, lessons } = appData;
 
-// Run
-loadApp();
+            levels.forEach(level => {
+
+                const levelName = (lang === "kn")
+                    ? (level.name_kn || "ಜೂನಿಯರ್")
+                    : (level.name_en || "Junior");
+
+                const levelCard = createDiv("card", levelName);
+                const levelContent = createDiv("content", "");
+
+                sections.filter(s => s.level_id === level.id)
+                    .forEach(section => {
+
+                        const sectionCard = createDiv("sub-card", getName(section));
+                        const sectionContent = createDiv("content", "");
+
+                        topics.filter(t => t.section_id === section.id)
+                            .forEach(topic => {
+
+                                const topicCard = createDiv("sub-card", getName(topic));
+                                const topicContent = createDiv("content", "");
+
+                                lessons.filter(l => l.topic_id === topic.id)
+                                    .forEach(lesson => {
+
+                                        const lessonDiv = createDiv("lesson", getName(lesson));
+                                        topicContent.appendChild(lessonDiv);
+                                    });
+
+                                toggle(topicCard, topicContent);
+                                sectionContent.appendChild(topicCard);
+                                sectionContent.appendChild(topicContent);
+                            });
+
+                        toggle(sectionCard, sectionContent);
+                        levelContent.appendChild(sectionCard);
+                        levelContent.appendChild(sectionContent);
+                    });
+
+                toggle(levelCard, levelContent);
+                app.appendChild(levelCard);
+                app.appendChild(levelContent);
+            });
+        }
+
+// ===== LOAD =====
+        async function loadApp() {
+
+            try {
+
+                if (!window.supabase) {
+                    app.innerHTML = "Supabase not loaded";
+                    return;
+                }
+
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+                app.innerText = "Loading...";
+
+                const [l1, l2, l3, l4] = await Promise.all([
+                    supabase.from("levels").select("*"),
+                    supabase.from("sections").select("*"),
+                    supabase.from("topics").select("*"),
+                    supabase.from("lessons").select("*")
+                ]);
+
+                if (l1.error) throw l1.error;
+                if (l2.error) throw l2.error;
+                if (l3.error) throw l3.error;
+                if (l4.error) throw l4.error;
+
+                appData = {
+                    levels: l1.data,
+                    sections: l2.data,
+                    topics: l3.data,
+                    lessons: l4.data
+                };
+
+                render();
+
+            } catch (err) {
+                console.error(err);
+                app.innerHTML = "ERROR: " + err.message;
+            }
+        }
+
+        loadApp();
+
+    };
 
 </script>
 

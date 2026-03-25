@@ -4,6 +4,358 @@
     <meta charset="UTF-8">
     <title>Carnatic Learning</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans&family=Noto+Sans+Kannada&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Noto Sans", sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #e2e8f0;
+        }
+
+        .header {
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            background: #6366f1;
+            color: white;
+        }
+
+        .container { max-width: 900px; margin: auto; padding: 20px; }
+
+        .card, .sub-card {
+            background: rgba(255,255,255,0.08);
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .sub-card { margin-left: 10px; }
+        .content { display: none; margin-left: 15px; }
+
+        .lesson {
+            padding: 8px;
+            margin: 6px 0;
+            font-size: 18px;
+            font-weight: 600;
+            background: rgba(255,255,255,0.06);
+            border-radius: 6px;
+        }
+
+        .notation {
+            font-size: 26px;
+            line-height: 1.8;
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.35);
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        /* ✅ SAME WIDTH FOR EVERYTHING */
+        .swara, .symbol {
+            display: inline-block;
+            min-width: 24px;
+            text-align: center;
+            margin-right: 6px;
+        }
+
+        .swara sub {
+            font-size: 14px;
+        }
+
+        .comma {
+            opacity: 0.7;
+        }
+
+        .bar {
+            margin: 0 14px;
+            font-weight: bold;
+        }
+
+        button { margin-right: 10px; padding: 6px 12px; }
+    </style>
+</head>
+
+<body>
+
+<div class="header">Carnatic Learning</div>
+<div id="app" class="container">Loading...</div>
+
+<script>
+    window.onload = function () {
+
+        const URL="https://jlnyecsqjdphgsaabyja.supabase.co";
+        const KEY="sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk";
+
+        const app=document.getElementById("app");
+
+        let lang="kn";
+        let appData=null;
+        let lessonContent=[];
+
+        /* GROUPING */
+        function getLessonGroup(name){
+            if(!name) return "other";
+            const n=name.toLowerCase();
+
+            if(n.includes("ಸರಳಿ")||n.includes("sarali")) return "sarali";
+            if(n.includes("ಜಂಟಿ")||n.includes("janti")) return "janti";
+            if(n.includes("ದಾಟು")||n.includes("datu")) return "datu";
+            if(n.includes("ಅಲಂಕಾರ")||n.includes("alankara")) return "alankara";
+
+            return "other";
+        }
+
+        /* TOKENIZE */
+        function formatTokens(text){
+            return text.trim().split(/\s+/).map(token=>{
+                if(token==="|"||token==="||"||token===",") return token;
+
+                const match=token.match(/^([SRGMPDN])(1|2|3)?('?)/);
+                if(!match) return token;
+
+                let base=match[1];
+                let num=match[2];
+                let upper=match[3];
+
+                if(base==="S"&&upper) base="Ṡ";
+
+                return {base,num};
+            });
+        }
+
+        function toKannada(base){
+            switch(base){
+                case "S": return "ಸ";
+                case "R": return "ರಿ";
+                case "G": return "ಗ";
+                case "M": return "ಮ";
+                case "P": return "ಪ";
+                case "D": return "ದ";
+                case "N": return "ನಿ";
+                case "Ṡ": return "ಸ̇";
+                default: return base;
+            }
+        }
+
+        /* ✅ FIXED RENDER (comma full width) */
+        function renderLine(container,text){
+
+            const tokens=formatTokens(text);
+
+            tokens.forEach(t=>{
+
+                // SYMBOLS
+                if(typeof t==="string"){
+
+                    const span=document.createElement("span");
+
+                    if(t===","){
+                        span.innerText=",";
+                        span.className="symbol comma";
+                    }
+                    else if(t==="|"||t==="||"){
+                        span.innerText=t;
+                        span.className="symbol bar";
+                    }
+                    else{
+                        span.innerText=t;
+                        span.className="symbol";
+                    }
+
+                    container.appendChild(span);
+                    return;
+                }
+
+                // SWARA
+                const span=document.createElement("span");
+                span.className="swara";
+
+                let base=(lang==="kn")?toKannada(t.base):t.base;
+
+                span.innerText=base;
+
+                if(t.num){
+                    const sub=document.createElement("sub");
+                    sub.innerText=t.num;
+                    span.appendChild(sub);
+                }
+
+                container.appendChild(span);
+            });
+        }
+
+        function getName(obj){
+            return lang==="kn"
+                ? (obj.name_kn || obj.name)
+                : (obj.name_en || obj.name);
+        }
+
+        function createDiv(cls,text){
+            const d=document.createElement("div");
+            d.className=cls;
+            d.innerText=text;
+            return d;
+        }
+
+        function toggle(card,content){
+            card.onclick=()=>{
+                content.style.display =
+                    content.style.display==="block"?"none":"block";
+            };
+        }
+
+        function render(){
+
+            app.innerHTML="";
+
+            const bar=document.createElement("div");
+
+            const knBtn=document.createElement("button");
+            knBtn.innerText="ಕನ್ನಡ";
+            knBtn.onclick=()=>{lang="kn"; render();};
+
+            const enBtn=document.createElement("button");
+            enBtn.innerText="English";
+            enBtn.onclick=()=>{lang="en"; render();};
+
+            bar.appendChild(knBtn);
+            bar.appendChild(enBtn);
+            app.appendChild(bar);
+
+            const {levels,sections,topics,lessons}=appData;
+
+            levels.forEach(level=>{
+
+                const levelCard=createDiv("card",getName(level));
+                const levelContent=createDiv("content","");
+
+                sections.filter(s=>s.level_id===level.id)
+                    .forEach(section=>{
+
+                        const secCard=createDiv("sub-card",getName(section));
+                        const secContent=createDiv("content","");
+
+                        topics.filter(t=>t.section_id===section.id)
+                            .forEach(topic=>{
+
+                                const topicCard=createDiv("sub-card",getName(topic));
+                                const topicContent=createDiv("content","");
+
+                                const topicLessons = lessons
+                                    .filter(l=>l.topic_id===topic.id)
+                                    .sort((a,b)=>(a.display_order ?? a.id)-(b.display_order ?? b.id));
+
+                                const grouped={};
+
+                                topicLessons.forEach(l=>{
+                                    const g=getLessonGroup(l.name);
+                                    if(!grouped[g]) grouped[g]=[];
+                                    grouped[g].push(l);
+                                });
+
+                                const order=["sarali","janti","datu","alankara","other"];
+
+                                order.forEach(group=>{
+
+                                    if(!grouped[group]) return;
+
+                                    const header=createDiv("sub-card",
+                                        group==="sarali"?"ಸರಳಿ ವರಸೆ":
+                                            group==="janti"?"ಜಂಟಿ ವರಸೆ":
+                                                group==="datu"?"ದಾಟು ವರಸೆ":
+                                                    group==="alankara"?"ಅಲಂಕಾರ":
+                                                        "Others"
+                                    );
+
+                                    const groupContent=createDiv("content","");
+
+                                    grouped[group].forEach(lesson=>{
+
+                                        const lessonDiv=createDiv("lesson",getName(lesson));
+                                        const swaraDiv=document.createElement("div");
+
+                                        lessonDiv.onclick=()=>{
+
+                                            swaraDiv.innerHTML="";
+
+                                            const rows = lessonContent
+                                                .filter(c=>c.lesson_id===lesson.id)
+                                                .sort((a,b)=>a.line_no-b.line_no);
+
+                                            rows.forEach(r=>{
+                                                const line=document.createElement("div");
+                                                line.className="notation";
+                                                renderLine(line,r.content_en||"");
+                                                swaraDiv.appendChild(line);
+                                            });
+                                        };
+
+                                        groupContent.appendChild(lessonDiv);
+                                        groupContent.appendChild(swaraDiv);
+                                    });
+
+                                    toggle(header,groupContent);
+                                    topicContent.appendChild(header);
+                                    topicContent.appendChild(groupContent);
+                                });
+
+                                toggle(topicCard,topicContent);
+                                secContent.appendChild(topicCard);
+                                secContent.appendChild(topicContent);
+                            });
+
+                        toggle(secCard,secContent);
+                        levelContent.appendChild(secCard);
+                        levelContent.appendChild(secContent);
+                    });
+
+                toggle(levelCard,levelContent);
+                app.appendChild(levelCard);
+                app.appendChild(levelContent);
+            });
+        }
+
+        async function load(){
+
+            const supabase=window.supabase.createClient(URL,KEY);
+
+            const [l1,l2,l3,l4,l5]=await Promise.all([
+                supabase.from("levels").select("*"),
+                supabase.from("sections").select("*"),
+                supabase.from("topics").select("*"),
+                supabase.from("lessons").select("*"),
+                supabase.from("lesson_content").select("*")
+            ]);
+
+            appData={
+                levels:l1.data||[],
+                sections:l2.data||[],
+                topics:l3.data||[],
+                lessons:l4.data||[]
+            };
+
+            lessonContent=l5.data||[];
+
+            render();
+        }
+
+        load();
+    };
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Carnatic Learning</title>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
     <style>

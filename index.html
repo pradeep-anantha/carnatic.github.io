@@ -11,382 +11,60 @@
         body {
             margin: 0;
             font-family: "Noto Sans", sans-serif;
-            background: linear-gradient(135deg, #0f172a, #1e293b);
+            background: #0f172a;
             color: #e2e8f0;
         }
 
         .header {
-            padding: 20px;
+            padding: 14px;
             text-align: center;
-            font-size: 24px;
+            font-size: 20px;
             background: #6366f1;
             color: white;
         }
 
-        .container { max-width: 900px; margin: auto; padding: 20px; }
-
-        .card, .sub-card {
-            background: rgba(255,255,255,0.08);
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 10px;
-            cursor: pointer;
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 16px;
         }
 
-        .sub-card { margin-left: 10px; }
-        .content { display: none; margin-left: 15px; }
-
-        .lesson {
-            padding: 8px;
-            margin: 6px 0;
-            font-size: 18px;
-            font-weight: 600;
-            background: rgba(255,255,255,0.06);
-            border-radius: 6px;
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
         }
 
-        .notation {
-            font-size: 26px;
-            line-height: 1.8;
-            margin: 10px 0;
-            padding: 12px;
+        .search {
+            flex: 1;
+            padding: 10px;
             border-radius: 8px;
-            background: rgba(0,0,0,0.35);
-            text-align: center;
-            letter-spacing: 1px;
+            border: none;
         }
 
-        /* ✅ SAME WIDTH FOR EVERYTHING */
-        .swara, .symbol {
-            display: inline-block;
-            min-width: 24px;
-            text-align: center;
-            margin-right: 6px;
-        }
-
-        .swara sub {
-            font-size: 14px;
-        }
-
-        .comma {
-            opacity: 0.7;
-        }
-
-        .bar {
-            margin: 0 14px;
-            font-weight: bold;
-        }
-
-        button { margin-right: 10px; padding: 6px 12px; }
-    </style>
-</head>
-
-<body>
-
-<div class="header">Carnatic Learning</div>
-<div id="app" class="container">Loading...</div>
-
-<script>
-    window.onload = function () {
-
-        const URL="https://jlnyecsqjdphgsaabyja.supabase.co";
-        const KEY="sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk";
-
-        const app=document.getElementById("app");
-
-        let lang="kn";
-        let appData=null;
-        let lessonContent=[];
-
-        /* GROUPING */
-        function getLessonGroup(name){
-            if(!name) return "other";
-            const n=name.toLowerCase();
-
-            if(n.includes("ಸರಳಿ")||n.includes("sarali")) return "sarali";
-            if(n.includes("ಜಂಟಿ")||n.includes("janti")) return "janti";
-            if(n.includes("ದಾಟು")||n.includes("datu")) return "datu";
-            if(n.includes("ಅಲಂಕಾರ")||n.includes("alankara")) return "alankara";
-
-            return "other";
-        }
-
-        /* TOKENIZE */
-        function formatTokens(text){
-            return text.trim().split(/\s+/).map(token=>{
-                if(token==="|"||token==="||"||token===",") return token;
-
-                const match=token.match(/^([SRGMPDN])(1|2|3)?('?)/);
-                if(!match) return token;
-
-                let base=match[1];
-                let num=match[2];
-                let upper=match[3];
-
-                if(base==="S"&&upper) base="Ṡ";
-
-                return {base,num};
-            });
-        }
-
-        function toKannada(base){
-            switch(base){
-                case "S": return "ಸ";
-                case "R": return "ರಿ";
-                case "G": return "ಗ";
-                case "M": return "ಮ";
-                case "P": return "ಪ";
-                case "D": return "ದ";
-                case "N": return "ನಿ";
-                case "Ṡ": return "ಸ̇";
-                default: return base;
-            }
-        }
-
-        /* ✅ FIXED RENDER (comma full width) */
-        function renderLine(container,text){
-
-            const tokens=formatTokens(text);
-
-            tokens.forEach(t=>{
-
-                // SYMBOLS
-                if(typeof t==="string"){
-
-                    const span=document.createElement("span");
-
-                    if(t===","){
-                        span.innerText=",";
-                        span.className="symbol comma";
-                    }
-                    else if(t==="|"||t==="||"){
-                        span.innerText=t;
-                        span.className="symbol bar";
-                    }
-                    else{
-                        span.innerText=t;
-                        span.className="symbol";
-                    }
-
-                    container.appendChild(span);
-                    return;
-                }
-
-                // SWARA
-                const span=document.createElement("span");
-                span.className="swara";
-
-                let base=(lang==="kn")?toKannada(t.base):t.base;
-
-                span.innerText=base;
-
-                if(t.num){
-                    const sub=document.createElement("sub");
-                    sub.innerText=t.num;
-                    span.appendChild(sub);
-                }
-
-                container.appendChild(span);
-            });
-        }
-
-        function getName(obj){
-            return lang==="kn"
-                ? (obj.name_kn || obj.name)
-                : (obj.name_en || obj.name);
-        }
-
-        function createDiv(cls,text){
-            const d=document.createElement("div");
-            d.className=cls;
-            d.innerText=text;
-            return d;
-        }
-
-        function toggle(card,content){
-            card.onclick=()=>{
-                content.style.display =
-                    content.style.display==="block"?"none":"block";
-            };
-        }
-
-        function render(){
-
-            app.innerHTML="";
-
-            const bar=document.createElement("div");
-
-            const knBtn=document.createElement("button");
-            knBtn.innerText="ಕನ್ನಡ";
-            knBtn.onclick=()=>{lang="kn"; render();};
-
-            const enBtn=document.createElement("button");
-            enBtn.innerText="English";
-            enBtn.onclick=()=>{lang="en"; render();};
-
-            bar.appendChild(knBtn);
-            bar.appendChild(enBtn);
-            app.appendChild(bar);
-
-            const {levels,sections,topics,lessons}=appData;
-
-            levels.forEach(level=>{
-
-                const levelCard=createDiv("card",getName(level));
-                const levelContent=createDiv("content","");
-
-                sections.filter(s=>s.level_id===level.id)
-                    .forEach(section=>{
-
-                        const secCard=createDiv("sub-card",getName(section));
-                        const secContent=createDiv("content","");
-
-                        topics.filter(t=>t.section_id===section.id)
-                            .forEach(topic=>{
-
-                                const topicCard=createDiv("sub-card",getName(topic));
-                                const topicContent=createDiv("content","");
-
-                                const topicLessons = lessons
-                                    .filter(l=>l.topic_id===topic.id)
-                                    .sort((a,b)=>(a.display_order ?? a.id)-(b.display_order ?? b.id));
-
-                                const grouped={};
-
-                                topicLessons.forEach(l=>{
-                                    const g=getLessonGroup(l.name);
-                                    if(!grouped[g]) grouped[g]=[];
-                                    grouped[g].push(l);
-                                });
-
-                                const order=["sarali","janti","datu","alankara","other"];
-
-                                order.forEach(group=>{
-
-                                    if(!grouped[group]) return;
-
-                                    const header=createDiv("sub-card",
-                                        group==="sarali"?"ಸರಳಿ ವರಸೆ":
-                                            group==="janti"?"ಜಂಟಿ ವರಸೆ":
-                                                group==="datu"?"ದಾಟು ವರಸೆ":
-                                                    group==="alankara"?"ಅಲಂಕಾರ":
-                                                        "Others"
-                                    );
-
-                                    const groupContent=createDiv("content","");
-
-                                    grouped[group].forEach(lesson=>{
-
-                                        const lessonDiv=createDiv("lesson",getName(lesson));
-                                        const swaraDiv=document.createElement("div");
-
-                                        lessonDiv.onclick=()=>{
-
-                                            swaraDiv.innerHTML="";
-
-                                            const rows = lessonContent
-                                                .filter(c=>c.lesson_id===lesson.id)
-                                                .sort((a,b)=>a.line_no-b.line_no);
-
-                                            rows.forEach(r=>{
-                                                const line=document.createElement("div");
-                                                line.className="notation";
-                                                renderLine(line,r.content_en||"");
-                                                swaraDiv.appendChild(line);
-                                            });
-                                        };
-
-                                        groupContent.appendChild(lessonDiv);
-                                        groupContent.appendChild(swaraDiv);
-                                    });
-
-                                    toggle(header,groupContent);
-                                    topicContent.appendChild(header);
-                                    topicContent.appendChild(groupContent);
-                                });
-
-                                toggle(topicCard,topicContent);
-                                secContent.appendChild(topicCard);
-                                secContent.appendChild(topicContent);
-                            });
-
-                        toggle(secCard,secContent);
-                        levelContent.appendChild(secCard);
-                        levelContent.appendChild(secContent);
-                    });
-
-                toggle(levelCard,levelContent);
-                app.appendChild(levelCard);
-                app.appendChild(levelContent);
-            });
-        }
-
-        async function load(){
-
-            const supabase=window.supabase.createClient(URL,KEY);
-
-            const [l1,l2,l3,l4,l5]=await Promise.all([
-                supabase.from("levels").select("*"),
-                supabase.from("sections").select("*"),
-                supabase.from("topics").select("*"),
-                supabase.from("lessons").select("*"),
-                supabase.from("lesson_content").select("*")
-            ]);
-
-            appData={
-                levels:l1.data||[],
-                sections:l2.data||[],
-                topics:l3.data||[],
-                lessons:l4.data||[]
-            };
-
-            lessonContent=l5.data||[];
-
-            render();
-        }
-
-        load();
-    };
-</script>
-
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Carnatic Learning</title>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            color: #e2e8f0;
-        }
-
-        .header {
-            padding: 20px;
-            text-align: center;
-            font-size: 24px;
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
             background: #6366f1;
             color: white;
+            cursor: pointer;
         }
-
-        .container { max-width: 900px; margin: auto; padding: 20px; }
 
         .card, .sub-card {
             background: rgba(255,255,255,0.08);
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
             cursor: pointer;
         }
 
         .sub-card { margin-left: 10px; }
 
-        .content { display: none; margin-left: 15px; }
+        .content {
+            display: none;
+            margin-left: 14px;
+        }
 
         .lesson {
             padding: 6px;
@@ -395,188 +73,227 @@
             border-radius: 6px;
         }
 
-        .notation {
-            font-family: "Courier New", monospace;
-            font-size: 20px;
-            margin-left: 10px;
-            white-space: pre;
+        .hidden {
+            display: none !important;
         }
 
-        button { margin-right: 10px; padding: 6px 12px; }
+        .notation {
+            font-size: 22px;
+            margin: 8px 0;
+            padding: 8px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .swara,.symbol {
+            display: inline-block;
+            min-width: 22px;
+            text-align: center;
+            margin-right: 5px;
+        }
+
+        .bar { margin: 0 10px; font-weight: bold; }
     </style>
 </head>
 
 <body>
 
 <div class="header">Carnatic Learning</div>
-<div id="app" class="container">Initializing...</div>
+
+<div class="container">
+    <div class="toolbar">
+        <input id="search" class="search" placeholder="Search (sarali 5)">
+        <button id="knBtn">Kannada</button>
+        <button id="enBtn">English</button>
+    </div>
+
+    <div id="app">Loading...</div>
+</div>
 
 <script>
-    window.onload = function () {
 
-        const URL="https://jlnyecsqjdphgsaabyja.supabase.co";
-        const KEY="sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk";
+    /* ✅ CORRECT CONFIG */
+    const SUPABASE_URL = "https://jlnyecsqjdphgsaabyja.supabase.co".trim();
+    const SUPABASE_KEY = "sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk".trim();
+
+    let appData, lessonContent, lang="kn";
+
+    /* ---------- SAFE NAME ---------- */
+    function getName(o){
+        return lang==="kn" ? (o.name_kn||o.name||"") : (o.name_en||o.name||"");
+    }
+
+    /* ---------- TOKEN ---------- */
+    function formatTokens(t){
+        if(!t) return [];
+        return t.split(/\s+/).map(x=>{
+            if(["|","||",","].includes(x)) return x;
+            const m=x.match(/^([SRGMPDN])(1|2|3)?('?)/);
+            if(!m) return x;
+            let b=m[1]; if(b==="S"&&m[3]) b="Ṡ";
+            return {b,n:m[2]};
+        });
+    }
+
+    function toKn(b){
+        return {S:"ಸ",R:"ರಿ",G:"ಗ",M:"ಮ",P:"ಪ",D:"ದ",N:"ನಿ","Ṡ":"ಸ̇"}[b]||b;
+    }
+
+    function renderLine(el,t){
+        formatTokens(t).forEach(x=>{
+            const s=document.createElement("span");
+            if(typeof x==="string"){
+                s.innerText=x;
+                s.className=(x==="|"||x==="||")?"symbol bar":"symbol";
+            } else {
+                s.className="swara";
+                s.innerText=lang==="kn"?toKn(x.b):x.b;
+                if(x.n){
+                    const sub=document.createElement("sub");
+                    sub.innerText=x.n;
+                    s.appendChild(sub);
+                }
+            }
+            el.appendChild(s);
+        });
+    }
+
+    /* ---------- HELPERS ---------- */
+    function div(cls,text=""){
+        const d=document.createElement("div");
+        d.className=cls;
+        d.innerText=text;
+        return d;
+    }
+
+    function toggle(card,content){
+        card.onclick=(e)=>{
+            e.stopPropagation();
+            content.style.display = content.style.display==="block"?"none":"block";
+        };
+    }
+
+    /* ---------- BUILD TREE ---------- */
+    function buildTree(){
 
         const app=document.getElementById("app");
+        app.innerHTML="";
 
-        let lang="kn";
-        let appData=null;
-        let lessonContent=[];
+        const {levels,sections,topics,lessons}=appData;
 
-        /* 🎯 FORMAT SWARA */
-        function formatSwara(text){
-            if(!text) return "";
+        levels.forEach(level=>{
+            const lCard=div("card",getName(level));
+            const lCont=div("content");
+            toggle(lCard,lCont);
 
-            text = text.trim().toUpperCase();
+            sections.filter(s=>+s.level_id===+level.id)
+                .forEach(section=>{
 
-            text = text.replace(/S''/g,"Ṡ").replace(/S'/g,"Ṡ");
+                    const sCard=div("sub-card",getName(section));
+                    const sCont=div("content");
+                    toggle(sCard,sCont);
 
-            text = text
-                .replace(/R1/g,"R₁").replace(/R2/g,"R₂").replace(/R3/g,"R₃")
-                .replace(/G1/g,"G₁").replace(/G2/g,"G₂").replace(/G3/g,"G₃")
-                .replace(/M1/g,"M₁").replace(/M2/g,"M₂")
-                .replace(/D1/g,"D₁").replace(/D2/g,"D₂").replace(/D3/g,"D₃")
-                .replace(/N1/g,"N₁").replace(/N2/g,"N₂").replace(/N3/g,"N₃");
+                    topics.filter(t=>+t.section_id===+section.id)
+                        .forEach(topic=>{
 
-            return text;
-        }
+                            const tCard=div("sub-card",getName(topic));
+                            const tCont=div("content");
+                            toggle(tCard,tCont);
 
-        /* 🎯 KANNADA SWARA (FIXED) */
-        function toKannadaSwara(text){
+                            lessons.filter(l=>+l.topic_id===+topic.id)
+                                .sort((a,b)=>(a.display_order??a.id)-(b.display_order??b.id))
+                                .forEach(lesson=>{
 
-            // safe upper octave
-            text = text.replace(/Ṡ/g,"ಸ'");
+                                    const l=div("lesson",getName(lesson));
+                                    l.dataset.name=getName(lesson).toLowerCase();
 
-            return text
-                .replace(/S/g,"ಸ")
-                .replace(/R/g,"ರಿ")
-                .replace(/G/g,"ಗ")
-                .replace(/M/g,"ಮ")
-                .replace(/P/g,"ಪ")
-                .replace(/D/g,"ದ")
-                .replace(/N/g,"ನಿ");
-        }
+                                    const out=document.createElement("div");
 
-        /* NAME */
-        function getName(obj){
-            return lang==="kn"
-                ? (obj.name_kn || obj.name)
-                : (obj.name_en || obj.name);
-        }
-
-        function createDiv(cls,text){
-            const d=document.createElement("div");
-            d.className=cls;
-            d.innerText=text;
-            return d;
-        }
-
-        function toggle(card,content){
-            card.onclick=()=>{
-                content.style.display =
-                    content.style.display==="block"?"none":"block";
-            };
-        }
-
-        /* 🎯 RENDER */
-        function render(){
-
-            app.innerHTML="";
-
-            const bar=document.createElement("div");
-
-            const knBtn=document.createElement("button");
-            knBtn.innerText="ಕನ್ನಡ";
-            knBtn.onclick=()=>{lang="kn"; render();};
-
-            const enBtn=document.createElement("button");
-            enBtn.innerText="English";
-            enBtn.onclick=()=>{lang="en"; render();};
-
-            bar.appendChild(knBtn);
-            bar.appendChild(enBtn);
-            app.appendChild(bar);
-
-            const {levels,sections,topics,lessons}=appData;
-
-            levels.forEach(level=>{
-
-                const levelCard=createDiv("card",getName(level));
-                const levelContent=createDiv("content","");
-
-                sections.filter(s=>s.level_id===level.id)
-                    .forEach(section=>{
-
-                        const secCard=createDiv("sub-card",getName(section));
-                        const secContent=createDiv("content","");
-
-                        topics.filter(t=>t.section_id===section.id)
-                            .forEach(topic=>{
-
-                                const topicCard=createDiv("sub-card",getName(topic));
-                                const topicContent=createDiv("content","");
-
-                                lessons
-                                    .filter(l=>l.topic_id===topic.id)
-                                    .sort((a,b)=>(a.display_order||0)-(b.display_order||0))
-                                    .forEach(lesson=>{
-
-                                        const lessonDiv=createDiv("lesson",getName(lesson));
-                                        const swaraDiv=document.createElement("div");
-
-                                        lessonDiv.onclick=()=>{
-
-                                            swaraDiv.innerHTML="";
-
-                                            const rows = lessonContent
-                                                .filter(c=>c.lesson_id===lesson.id)
-                                                .sort((a,b)=>a.line_no-b.line_no);
-
-                                            rows.forEach(r=>{
-                                                let txt = (lang==="kn" && r.content_kn && r.content_kn.trim())
-                                                    ? r.content_kn
-                                                    : r.content_en;
-
-                                                let formatted = formatSwara(txt);
-
-                                                if(lang==="kn"){
-                                                    formatted = toKannadaSwara(formatted);
-                                                }
-
-                                                const line=document.createElement("div");
-                                                line.className="notation";
-                                                line.innerHTML = formatted;
-
-                                                swaraDiv.appendChild(line);
+                                    l.onclick=()=>{
+                                        out.innerHTML="";
+                                        lessonContent
+                                            .filter(c=>+c.lesson_id===+lesson.id)
+                                            .sort((a,b)=>a.line_no-b.line_no)
+                                            .forEach(r=>{
+                                                const line=div("notation");
+                                                renderLine(line,r.content_en||"");
+                                                out.appendChild(line);
                                             });
-                                        };
+                                    };
 
-                                        topicContent.appendChild(lessonDiv);
-                                        topicContent.appendChild(swaraDiv);
-                                    });
+                                    tCont.appendChild(l);
+                                    tCont.appendChild(out);
+                                });
 
-                                toggle(topicCard,topicContent);
-                                secContent.appendChild(topicCard);
-                                secContent.appendChild(topicContent);
-                            });
+                            sCont.appendChild(tCard);
+                            sCont.appendChild(tCont);
+                        });
 
-                        toggle(secCard,secContent);
-                        levelContent.appendChild(secCard);
-                        levelContent.appendChild(secContent);
-                    });
+                    lCont.appendChild(sCard);
+                    lCont.appendChild(sCont);
+                });
 
-                toggle(levelCard,levelContent);
-                app.appendChild(levelCard);
-                app.appendChild(levelContent);
-            });
-        }
+            app.appendChild(lCard);
+            app.appendChild(lCont);
+        });
+    }
 
-        /* LOAD */
-        async function load(){
+    /* ---------- SEARCH ---------- */
+    function applySearch(){
 
-            const supabase=window.supabase.createClient(URL,KEY);
+        const term = document.getElementById("search").value
+            .toLowerCase()
+            .replace(/\s+/g, "");
 
-            const [l1,l2,l3,l4,l5]=await Promise.all([
+        const lessons = document.querySelectorAll(".lesson");
+
+        lessons.forEach(l => {
+
+            const name = (l.dataset.name || "")
+                .toLowerCase()
+                .replace(/\s+/g, "");
+
+            const match = !term || name.includes(term);
+
+            // 🔥 FIX: hide BOTH lesson + its details
+            const details = l.nextElementSibling;
+
+            if (match) {
+                l.classList.remove("hidden");
+                if (details) details.classList.remove("hidden");
+
+                // auto expand
+                if (term) {
+                    let el = l.parentElement;
+                    while (el) {
+                        if (el.classList.contains("content")) {
+                            el.style.display = "block";
+                        }
+                        el = el.parentElement;
+                    }
+                }
+
+            } else {
+                l.classList.add("hidden");
+                if (details) details.classList.add("hidden");
+            }
+        });
+
+    }
+
+    /* ---------- LOAD ---------- */
+    async function load(){
+
+        try {
+
+            if (!window.supabase) throw new Error("Supabase not loaded");
+
+            console.log("Using URL:", SUPABASE_URL);
+
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+            const [l1,l2,l3,l4,l5] = await Promise.all([
                 supabase.from("levels").select("*"),
                 supabase.from("sections").select("*"),
                 supabase.from("topics").select("*"),
@@ -584,21 +301,45 @@
                 supabase.from("lesson_content").select("*")
             ]);
 
+            if (l1.error || l2.error || l3.error || l4.error || l5.error) {
+                console.error(l1,l2,l3,l4,l5);
+                throw new Error("Database fetch failed");
+            }
+
             appData={
-                levels:l1.data||[],
-                sections:l2.data||[],
-                topics:l3.data||[],
-                lessons:l4.data||[]
+                levels:l1.data,
+                sections:l2.data,
+                topics:l3.data,
+                lessons:l4.data
             };
 
-            lessonContent = l5.data || [];
+            lessonContent=l5.data;
 
-            render();
+            buildTree();
+
+        } catch(err){
+
+            console.error(err);
+
+            document.getElementById("app").innerHTML = `
+      <div style="color:red;text-align:center;padding:20px">
+        Failed to load data<br><br>${err.message}
+      </div>
+    `;
         }
+    }
+
+    /* ---------- INIT ---------- */
+    window.addEventListener("load", () => {
 
         load();
 
-    };
+        document.getElementById("search").addEventListener("input", applySearch);
+
+        document.getElementById("knBtn").onclick=()=>{lang="kn"; buildTree();};
+        document.getElementById("enBtn").onclick=()=>{lang="en"; buildTree();};
+
+    });
 </script>
 
 </body>

@@ -1,220 +1,179 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Carnatic Flute Syllabus</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carnatic Learning</title>
+
+<!-- Correct Supabase UMD -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
 body {
+  margin: 0;
   font-family: Arial, sans-serif;
-  margin: 20px;
-  background: #f5f5f5;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #e2e8f0;
 }
 
-h2 {
-  margin-bottom: 10px;
-}
-
-button {
-  margin: 4px;
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  background: white;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #eee;
+.header {
+  padding: 20px;
+  text-align: center;
+  font-size: 24px;
+  background: #6366f1;
+  color: white;
 }
 
 .container {
-  margin-top: 15px;
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
 }
 
-.card {
-  background: white;
-  padding: 10px;
+.card, .sub-card {
+  background: rgba(255,255,255,0.08);
+  padding: 12px;
   margin-bottom: 10px;
-  border: 1px solid #ddd;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.card { font-weight: bold; }
+.sub-card { margin-left: 10px; }
+
+.content {
+  display: none;
+  margin-left: 15px;
+}
+
+.lesson {
+  padding: 6px;
+  margin: 4px 0;
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Carnatic Flute Syllabus</h2>
+<div class="header">Carnatic Learning</div>
+<div id="app" class="container">Initializing...</div>
 
-<div id="status">Loading...</div>
+<script>
 
-<div id="levels"></div>
-<div id="sections"></div>
+// ================= CONFIG =================
+// 🔴 REPLACE THESE WIhttps://jlnyecsqjdphgsaabyja.supabase.co
+const SUPABASE_URL = "https://jlnyecsqjdphgsaabyja.supabase.co";
+const SUPABASE_KEY = "sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk";
 
-<div id="content" class="container"></div>
+// ================= INIT =================
+const app = document.getElementById("app");
 
-<script type="module">
+function showError(msg) {
+  app.innerHTML = "<b>Error:</b> " + msg;
+}
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+function createDiv(className, text) {
+  const d = document.createElement("div");
+  d.className = className;
+  d.innerText = text;
+  return d;
+}
 
-const supabase = createClient(
-  "https://jlnyecsqjdphgsaabyja.supabase.co",
-  "sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk"
-);
+function toggle(card, content) {
+  card.onclick = () => {
+    content.style.display =
+      content.style.display === "block" ? "none" : "block";
+  };
+}
 
-const statusDiv = document.getElementById("status");
-const levelsDiv = document.getElementById("levels");
-const sectionsDiv = document.getElementById("sections");
-const contentDiv = document.getElementById("content");
-
-let categoriesMap = {};
-let subcategoriesMap = {};
-
-// =======================
-// INIT
-// =======================
-async function init() {
+// ================= MAIN =================
+async function loadApp() {
 
   try {
 
-    statusDiv.innerText = "Loading data...";
-
-    // Load categories
-    const catRes = await supabase.from('categories').select('*');
-    if (catRes.data) {
-      catRes.data.forEach(c => {
-        categoriesMap[c.id] = c.name;
-      });
-    }
-
-    // Load subcategories
-    const subRes = await supabase.from('subcategories').select('*');
-    if (subRes.data) {
-      subRes.data.forEach(s => {
-        subcategoriesMap[s.id] = s.name;
-      });
-    }
-
-    // Load levels
-    const { data: levels, error } = await supabase
-      .from('levels')
-      .select('*');
-
-    if (error) {
-      statusDiv.innerText = "Error loading levels";
+    // Check library
+    if (!window.supabase) {
+      showError("Supabase library not loaded");
       return;
     }
 
-    levelsDiv.innerHTML = "";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    levels.forEach(level => {
-      const btn = document.createElement("button");
-      btn.innerText = level.name;
+    app.innerText = "Loading data...";
 
-      btn.onclick = () => loadSections(level.id);
+    // Fetch all
+    const { data: levels, error: e1 } = await supabase.from("levels").select("*");
+    if (e1) throw e1;
 
-      levelsDiv.appendChild(btn);
-    });
+    const { data: sections, error: e2 } = await supabase.from("sections").select("*");
+    if (e2) throw e2;
 
-    statusDiv.innerText = "Ready";
+    const { data: topics, error: e3 } = await supabase.from("topics").select("*");
+    if (e3) throw e3;
 
-  } catch (err) {
-    statusDiv.innerText = "Error: " + err.message;
-  }
-}
+    const { data: lessons, error: e4 } = await supabase.from("lessons").select("*");
+    if (e4) throw e4;
 
-// =======================
-// LOAD SECTIONS
-// =======================
-async function loadSections(levelId) {
-
-  sectionsDiv.innerHTML = "";
-  contentDiv.innerHTML = "";
-
-  const { data: sections } = await supabase
-    .from('sections')
-    .select('*')
-    .eq('level_id', levelId);
-
-  if (!sections) {
-    statusDiv.innerText = "No sections found";
-    return;
-  }
-
-  sections.forEach(section => {
-    const btn = document.createElement("button");
-    btn.innerText = section.name;
-
-    btn.onclick = () => loadSyllabus(section.id);
-
-    sectionsDiv.appendChild(btn);
-  });
-}
-
-// =======================
-// LOAD SYLLABUS
-// =======================
-async function loadSyllabus(sectionId) {
-
-  contentDiv.innerHTML = "";
-
-  const { data: syllabus } = await supabase
-    .from('syllabus')
-    .select('*')
-    .eq('section_id', sectionId);
-
-  if (!syllabus) {
-    statusDiv.innerText = "No syllabus data";
-    return;
-  }
-
-  const grouped = {};
-
-  syllabus.forEach(item => {
-    const category = categoriesMap[item.category_id] || "Other";
-
-    if (!grouped[category]) {
-      grouped[category] = [];
+    if (!levels || levels.length === 0) {
+      showError("No data found in levels table");
+      return;
     }
 
-    grouped[category].push(item);
-  });
+    app.innerHTML = "";
 
-  Object.keys(grouped).forEach(category => {
+    // Build UI
+    levels.forEach(level => {
 
-    const card = document.createElement("div");
-    card.className = "card";
+      const levelCard = createDiv("card", level.name);
+      const levelContent = createDiv("content", "");
 
-    const title = document.createElement("div");
-    title.style.fontWeight = "bold";
-    title.innerText = category;
+      sections
+        .filter(s => s.level_id === level.id)
+        .forEach(section => {
 
-    card.appendChild(title);
+          const sectionCard = createDiv("sub-card", section.name);
+          const sectionContent = createDiv("content", "");
 
-    grouped[category].forEach(item => {
+          topics
+            .filter(t => t.section_id === section.id)
+            .forEach(topic => {
 
-      const row = document.createElement("div");
+              const topicCard = createDiv("sub-card", topic.name);
+              const topicContent = createDiv("content", "");
 
-      let text = "";
+              lessons
+                .filter(l => l.topic_id === topic.id)
+                .forEach(lesson => {
 
-      if (item.subcategory_id && subcategoriesMap[item.subcategory_id]) {
-        text += subcategoriesMap[item.subcategory_id] + ": ";
-      }
+                  const lessonDiv = createDiv("lesson", lesson.name);
+                  topicContent.appendChild(lessonDiv);
+                });
 
-      text += item.value || "";
+              toggle(topicCard, topicContent);
+              sectionContent.appendChild(topicCard);
+              sectionContent.appendChild(topicContent);
+            });
 
-      if (item.notes) {
-        text += " (" + item.notes + ")";
-      }
+          toggle(sectionCard, sectionContent);
+          levelContent.appendChild(sectionCard);
+          levelContent.appendChild(sectionContent);
+        });
 
-      row.innerText = text;
-      card.appendChild(row);
+      toggle(levelCard, levelContent);
+      app.appendChild(levelCard);
+      app.appendChild(levelContent);
     });
 
-    contentDiv.appendChild(card);
-  });
+  } catch (err) {
+    console.error(err);
+    showError(err.message);
+  }
 }
 
-// START
-init();
+// Run
+loadApp();
 
 </script>
 

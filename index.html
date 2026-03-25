@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carnatic Learning</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -23,11 +22,7 @@
             color: white;
         }
 
-        .container {
-            max-width: 900px;
-            margin: auto;
-            padding: 20px;
-        }
+        .container { max-width: 900px; margin: auto; padding: 20px; }
 
         .card, .sub-card {
             background: rgba(255,255,255,0.08);
@@ -37,13 +32,9 @@
             cursor: pointer;
         }
 
-        .card { font-weight: bold; }
         .sub-card { margin-left: 10px; }
 
-        .content {
-            display: none;
-            margin-left: 15px;
-        }
+        .content { display: none; margin-left: 15px; }
 
         .lesson {
             padding: 6px;
@@ -52,11 +43,14 @@
             border-radius: 6px;
         }
 
-        .toggle-bar button {
-            margin-right: 10px;
-            padding: 6px 12px;
-            cursor: pointer;
+        .notation {
+            font-family: "Courier New", monospace;
+            font-size: 20px;
+            margin-left: 10px;
+            white-space: pre;
         }
+
+        button { margin-right: 10px; padding: 6px 12px; }
     </style>
 </head>
 
@@ -66,170 +60,193 @@
 <div id="app" class="container">Initializing...</div>
 
 <script>
-
     window.onload = function () {
 
-        const SUPABASE_URL = "https://jlnyecsqjdphgsaabyja.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk";
+        const URL="https://jlnyecsqjdphgsaabyja.supabase.co";
+        const KEY="sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk";
 
-        const app = document.getElementById("app");
+        const app=document.getElementById("app");
 
-        let lang = "kn";
-        let appData = null;
+        let lang="kn";
+        let appData=null;
+        let lessonContent=[];
 
-// ===== SAFE NAME =====
-        function getName(obj, type) {
+        /* 🎯 FORMAT SWARA */
+        function formatSwara(text){
+            if(!text) return "";
 
-            if (type === "level") {
-                return lang === "kn"
-                    ? (obj.name_kn || "ಜೂನಿಯರ್")
-                    : (obj.name_en || "Junior");
-            }
+            text = text.trim().toUpperCase();
 
-            return lang === "kn"
+            text = text.replace(/S''/g,"Ṡ").replace(/S'/g,"Ṡ");
+
+            text = text
+                .replace(/R1/g,"R₁").replace(/R2/g,"R₂").replace(/R3/g,"R₃")
+                .replace(/G1/g,"G₁").replace(/G2/g,"G₂").replace(/G3/g,"G₃")
+                .replace(/M1/g,"M₁").replace(/M2/g,"M₂")
+                .replace(/D1/g,"D₁").replace(/D2/g,"D₂").replace(/D3/g,"D₃")
+                .replace(/N1/g,"N₁").replace(/N2/g,"N₂").replace(/N3/g,"N₃");
+
+            return text;
+        }
+
+        /* 🎯 KANNADA SWARA (FIXED) */
+        function toKannadaSwara(text){
+
+            // safe upper octave
+            text = text.replace(/Ṡ/g,"ಸ'");
+
+            return text
+                .replace(/S/g,"ಸ")
+                .replace(/R/g,"ರಿ")
+                .replace(/G/g,"ಗ")
+                .replace(/M/g,"ಮ")
+                .replace(/P/g,"ಪ")
+                .replace(/D/g,"ದ")
+                .replace(/N/g,"ನಿ");
+        }
+
+        /* NAME */
+        function getName(obj){
+            return lang==="kn"
                 ? (obj.name_kn || obj.name)
                 : (obj.name_en || obj.name);
         }
 
-// ===== UI HELPERS =====
-        function createDiv(cls, text) {
-            const d = document.createElement("div");
-            d.className = cls;
-            d.innerText = text;
+        function createDiv(cls,text){
+            const d=document.createElement("div");
+            d.className=cls;
+            d.innerText=text;
             return d;
         }
 
-        function toggle(card, content) {
-            card.onclick = () => {
+        function toggle(card,content){
+            card.onclick=()=>{
                 content.style.display =
-                    content.style.display === "block" ? "none" : "block";
+                    content.style.display==="block"?"none":"block";
             };
         }
 
-// ===== MAIN RENDER =====
-        function render() {
+        /* 🎯 RENDER */
+        function render(){
 
-            if (!appData) return;
+            app.innerHTML="";
 
-            // FULL RESET
-            app.innerHTML = "";
+            const bar=document.createElement("div");
 
-            // ===== TOGGLE BAR =====
-            const bar = document.createElement("div");
-            bar.style.marginBottom = "15px";
+            const knBtn=document.createElement("button");
+            knBtn.innerText="ಕನ್ನಡ";
+            knBtn.onclick=()=>{lang="kn"; render();};
 
-            const knBtn = document.createElement("button");
-            knBtn.innerText = "ಕನ್ನಡ";
-
-            const enBtn = document.createElement("button");
-            enBtn.innerText = "English";
-
-            // CRITICAL: force re-render
-            knBtn.addEventListener("click", () => {
-                lang = "kn";
-                render();
-            });
-
-            enBtn.addEventListener("click", () => {
-                lang = "en";
-                render();
-            });
+            const enBtn=document.createElement("button");
+            enBtn.innerText="English";
+            enBtn.onclick=()=>{lang="en"; render();};
 
             bar.appendChild(knBtn);
             bar.appendChild(enBtn);
             app.appendChild(bar);
 
-            const { levels, sections, topics, lessons } = appData;
+            const {levels,sections,topics,lessons}=appData;
 
-            levels.forEach(level => {
+            levels.forEach(level=>{
 
-                const levelName = (lang === "kn")
-                    ? (level.name_kn || "ಜೂನಿಯರ್")
-                    : (level.name_en || "Junior");
+                const levelCard=createDiv("card",getName(level));
+                const levelContent=createDiv("content","");
 
-                const levelCard = createDiv("card", levelName);
-                const levelContent = createDiv("content", "");
+                sections.filter(s=>s.level_id===level.id)
+                    .forEach(section=>{
 
-                sections.filter(s => s.level_id === level.id)
-                    .forEach(section => {
+                        const secCard=createDiv("sub-card",getName(section));
+                        const secContent=createDiv("content","");
 
-                        const sectionCard = createDiv("sub-card", getName(section));
-                        const sectionContent = createDiv("content", "");
+                        topics.filter(t=>t.section_id===section.id)
+                            .forEach(topic=>{
 
-                        topics.filter(t => t.section_id === section.id)
-                            .forEach(topic => {
+                                const topicCard=createDiv("sub-card",getName(topic));
+                                const topicContent=createDiv("content","");
 
-                                const topicCard = createDiv("sub-card", getName(topic));
-                                const topicContent = createDiv("content", "");
+                                lessons
+                                    .filter(l=>l.topic_id===topic.id)
+                                    .sort((a,b)=>(a.display_order||0)-(b.display_order||0))
+                                    .forEach(lesson=>{
 
-                                lessons.filter(l => l.topic_id === topic.id)
-                                    .forEach(lesson => {
+                                        const lessonDiv=createDiv("lesson",getName(lesson));
+                                        const swaraDiv=document.createElement("div");
 
-                                        const lessonDiv = createDiv("lesson", getName(lesson));
+                                        lessonDiv.onclick=()=>{
+
+                                            swaraDiv.innerHTML="";
+
+                                            const rows = lessonContent
+                                                .filter(c=>c.lesson_id===lesson.id)
+                                                .sort((a,b)=>a.line_no-b.line_no);
+
+                                            rows.forEach(r=>{
+                                                let txt = (lang==="kn" && r.content_kn && r.content_kn.trim())
+                                                    ? r.content_kn
+                                                    : r.content_en;
+
+                                                let formatted = formatSwara(txt);
+
+                                                if(lang==="kn"){
+                                                    formatted = toKannadaSwara(formatted);
+                                                }
+
+                                                const line=document.createElement("div");
+                                                line.className="notation";
+                                                line.innerHTML = formatted;
+
+                                                swaraDiv.appendChild(line);
+                                            });
+                                        };
+
                                         topicContent.appendChild(lessonDiv);
+                                        topicContent.appendChild(swaraDiv);
                                     });
 
-                                toggle(topicCard, topicContent);
-                                sectionContent.appendChild(topicCard);
-                                sectionContent.appendChild(topicContent);
+                                toggle(topicCard,topicContent);
+                                secContent.appendChild(topicCard);
+                                secContent.appendChild(topicContent);
                             });
 
-                        toggle(sectionCard, sectionContent);
-                        levelContent.appendChild(sectionCard);
-                        levelContent.appendChild(sectionContent);
+                        toggle(secCard,secContent);
+                        levelContent.appendChild(secCard);
+                        levelContent.appendChild(secContent);
                     });
 
-                toggle(levelCard, levelContent);
+                toggle(levelCard,levelContent);
                 app.appendChild(levelCard);
                 app.appendChild(levelContent);
             });
         }
 
-// ===== LOAD =====
-        async function loadApp() {
+        /* LOAD */
+        async function load(){
 
-            try {
+            const supabase=window.supabase.createClient(URL,KEY);
 
-                if (!window.supabase) {
-                    app.innerHTML = "Supabase not loaded";
-                    return;
-                }
+            const [l1,l2,l3,l4,l5]=await Promise.all([
+                supabase.from("levels").select("*"),
+                supabase.from("sections").select("*"),
+                supabase.from("topics").select("*"),
+                supabase.from("lessons").select("*"),
+                supabase.from("lesson_content").select("*")
+            ]);
 
-                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            appData={
+                levels:l1.data||[],
+                sections:l2.data||[],
+                topics:l3.data||[],
+                lessons:l4.data||[]
+            };
 
-                app.innerText = "Loading...";
+            lessonContent = l5.data || [];
 
-                const [l1, l2, l3, l4] = await Promise.all([
-                    supabase.from("levels").select("*"),
-                    supabase.from("sections").select("*"),
-                    supabase.from("topics").select("*"),
-                    supabase.from("lessons").select("*")
-                ]);
-
-                if (l1.error) throw l1.error;
-                if (l2.error) throw l2.error;
-                if (l3.error) throw l3.error;
-                if (l4.error) throw l4.error;
-
-                appData = {
-                    levels: l1.data,
-                    sections: l2.data,
-                    topics: l3.data,
-                    lessons: l4.data
-                };
-
-                render();
-
-            } catch (err) {
-                console.error(err);
-                app.innerHTML = "ERROR: " + err.message;
-            }
+            render();
         }
 
-        loadApp();
+        load();
 
     };
-
 </script>
 
 </body>

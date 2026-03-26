@@ -8,170 +8,118 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
     <style>
-        body {
-            margin: 0;
-            font-family: "Noto Sans", sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
+        body{
+            margin:0;
+            font-family:"Noto Sans","Noto Sans Kannada",sans-serif;
+            background:#0f172a;
+            color:#e2e8f0;
         }
 
-        .header {
-            padding: 14px;
-            text-align: center;
-            font-size: 20px;
-            background: #6366f1;
-            color: white;
+        .header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:14px 16px;
+            background:linear-gradient(90deg,#6366f1,#8b5cf6);
         }
 
-        .container {
-            max-width: 900px;
-            margin: auto;
-            padding: 16px;
+        .title{font-size:18px;font-weight:600;}
+
+        .controls{display:flex;gap:8px;}
+
+        .search{
+            padding:8px;
+            border-radius:8px;
+            border:none;
+            width:220px;
         }
 
-        .toolbar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 12px;
+        button{
+            padding:6px 10px;
+            border:none;
+            border-radius:6px;
+            background:#4f46e5;
+            color:white;
+            cursor:pointer;
         }
 
-        .search {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
+        .container{max-width:950px;margin:auto;padding:16px;}
+
+        .card,.sub-card{
+            background:#1e293b;
+            padding:12px;
+            margin-bottom:8px;
+            border-radius:10px;
+            cursor:pointer;
         }
 
-        button {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 6px;
-            background: #6366f1;
-            color: white;
-            cursor: pointer;
+        .sub-card{margin-left:12px;}
+        .content{display:none;margin-left:14px;}
+
+        .lesson{
+            padding:8px;
+            margin:6px 0;
+            background:#475569;
+            border-radius:8px;
         }
 
-        .card, .sub-card {
-            background: rgba(255,255,255,0.08);
-            padding: 10px;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            cursor: pointer;
+        .hidden{display:none !important;}
+
+        .highlight{
+            background:yellow;
+            color:black;
+            padding:2px 4px;
+            border-radius:4px;
         }
-
-        .sub-card { margin-left: 10px; }
-
-        .content {
-            display: none;
-            margin-left: 14px;
-        }
-
-        .lesson {
-            padding: 6px;
-            margin: 4px 0;
-            background: rgba(255,255,255,0.05);
-            border-radius: 6px;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .notation {
-            font-size: 22px;
-            margin: 8px 0;
-            padding: 8px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 6px;
-            text-align: center;
-        }
-
-        .swara,.symbol {
-            display: inline-block;
-            min-width: 22px;
-            text-align: center;
-            margin-right: 5px;
-        }
-
-        .bar { margin: 0 10px; font-weight: bold; }
     </style>
 </head>
 
 <body>
 
-<div class="header">Carnatic Learning</div>
+<div class="header">
+    <div class="title">Carnatic Learning</div>
+
+    <div class="controls">
+        <input id="search" class="search" placeholder="Search sarali 5">
+        <button id="knBtn">KN</button>
+        <button id="enBtn">EN</button>
+    </div>
+</div>
 
 <div class="container">
-    <div class="toolbar">
-        <input id="search" class="search" placeholder="Search (sarali 5)">
-        <button id="knBtn">Kannada</button>
-        <button id="enBtn">English</button>
-    </div>
-
     <div id="app">Loading...</div>
 </div>
 
 <script>
 
-    /* ✅ CORRECT CONFIG */
-    const SUPABASE_URL = "https://jlnyecsqjdphgsaabyja.supabase.co".trim();
-    const SUPABASE_KEY = "sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk".trim();
+    const SUPABASE_URL="https://jlnyecsqjdphgsaabyja.supabase.co";
+    const SUPABASE_KEY="sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk";
 
     let appData, lessonContent, lang="kn";
 
-    /* ---------- SAFE NAME ---------- */
+    /* ---------- NAME ---------- */
     function getName(o){
         return lang==="kn" ? (o.name_kn||o.name||"") : (o.name_en||o.name||"");
     }
 
-    /* ---------- TOKEN ---------- */
-    function formatTokens(t){
-        if(!t) return [];
-        return t.split(/\s+/).map(x=>{
-            if(["|","||",","].includes(x)) return x;
-            const m=x.match(/^([SRGMPDN])(1|2|3)?('?)/);
-            if(!m) return x;
-            let b=m[1]; if(b==="S"&&m[3]) b="Ṡ";
-            return {b,n:m[2]};
-        });
+    /* ---------- FUZZY MATCH ---------- */
+    function fuzzyMatch(text, search){
+        let ti=0, si=0;
+        while(ti<text.length && si<search.length){
+            if(text[ti]===search[si]) si++;
+            ti++;
+        }
+        return si===search.length;
     }
 
-    function toKn(b){
-        return {S:"ಸ",R:"ರಿ",G:"ಗ",M:"ಮ",P:"ಪ",D:"ದ",N:"ನಿ","Ṡ":"ಸ̇"}[b]||b;
-    }
-
-    function renderLine(el,t){
-        formatTokens(t).forEach(x=>{
-            const s=document.createElement("span");
-            if(typeof x==="string"){
-                s.innerText=x;
-                s.className=(x==="|"||x==="||")?"symbol bar":"symbol";
-            } else {
-                s.className="swara";
-                s.innerText=lang==="kn"?toKn(x.b):x.b;
-                if(x.n){
-                    const sub=document.createElement("sub");
-                    sub.innerText=x.n;
-                    s.appendChild(sub);
-                }
-            }
-            el.appendChild(s);
-        });
-    }
-
-    /* ---------- HELPERS ---------- */
-    function div(cls,text=""){
-        const d=document.createElement("div");
-        d.className=cls;
-        d.innerText=text;
-        return d;
-    }
-
-    function toggle(card,content){
-        card.onclick=(e)=>{
-            e.stopPropagation();
-            content.style.display = content.style.display==="block"?"none":"block";
+    /* ---------- SORT ---------- */
+    function lessonSort(a,b){
+        const getNum=(name,fallback)=>{
+            const m=(name||"").match(/\d+/);
+            return m?parseInt(m[0]):(fallback||0);
         };
+        return getNum(a.name_en,a.display_order??a.id)
+            - getNum(b.name_en,b.display_order??b.id);
     }
 
     /* ---------- BUILD TREE ---------- */
@@ -183,47 +131,47 @@
         const {levels,sections,topics,lessons}=appData;
 
         levels.forEach(level=>{
-            const lCard=div("card",getName(level));
-            const lCont=div("content");
+            const lCard=create("card",getName(level));
+            const lCont=create("content");
             toggle(lCard,lCont);
 
             sections.filter(s=>+s.level_id===+level.id)
                 .forEach(section=>{
 
-                    const sCard=div("sub-card",getName(section));
-                    const sCont=div("content");
+                    const sCard=create("sub-card",getName(section));
+                    const sCont=create("content");
                     toggle(sCard,sCont);
 
                     topics.filter(t=>+t.section_id===+section.id)
                         .forEach(topic=>{
 
-                            const tCard=div("sub-card",getName(topic));
-                            const tCont=div("content");
+                            const tCard=create("sub-card",getName(topic));
+                            const tCont=create("content");
                             toggle(tCard,tCont);
 
-                            lessons.filter(l=>+l.topic_id===+topic.id)
-                                .sort((a,b)=>(a.display_order??a.id)-(b.display_order??b.id))
+                            lessons
+                                .filter(l=>+l.topic_id===+topic.id)
+                                .sort(lessonSort)
                                 .forEach(lesson=>{
 
-                                    const l=div("lesson",getName(lesson));
+                                    const l=create("lesson",getName(lesson));
                                     l.dataset.name=getName(lesson).toLowerCase();
 
-                                    const out=document.createElement("div");
+                                    const det=document.createElement("div");
 
                                     l.onclick=()=>{
-                                        out.innerHTML="";
+                                        det.innerHTML="";
                                         lessonContent
                                             .filter(c=>+c.lesson_id===+lesson.id)
-                                            .sort((a,b)=>a.line_no-b.line_no)
                                             .forEach(r=>{
-                                                const line=div("notation");
-                                                renderLine(line,r.content_en||"");
-                                                out.appendChild(line);
+                                                const line=create("card");
+                                                line.innerText=r.content_en||"";
+                                                det.appendChild(line);
                                             });
                                     };
 
                                     tCont.appendChild(l);
-                                    tCont.appendChild(out);
+                                    tCont.appendChild(det);
                                 });
 
                             sCont.appendChild(tCard);
@@ -239,107 +187,137 @@
         });
     }
 
+    /* ---------- HELPERS ---------- */
+    function create(cls,text=""){
+        const d=document.createElement("div");
+        d.className=cls;
+        d.innerText=text;
+        return d;
+    }
+
+    function toggle(card,content){
+        card.onclick=(e)=>{
+            e.stopPropagation();
+            content.style.display =
+                content.style.display==="block"?"none":"block";
+        };
+    }
+
     /* ---------- SEARCH ---------- */
     function applySearch(){
 
-        const term = document.getElementById("search").value
-            .toLowerCase()
-            .replace(/\s+/g, "");
+        const raw = document.getElementById("search").value.toLowerCase().trim();
+        const tokens = raw.split(/\s+/).filter(Boolean);
 
         const lessons = document.querySelectorAll(".lesson");
 
+        // STEP 1: Hide everything initially
+        document.querySelectorAll(".lesson, .sub-card, .card, .content")
+            .forEach(el => el.classList.add("hidden"));
+
         lessons.forEach(l => {
 
-            const name = (l.dataset.name || "")
-                .toLowerCase()
-                .replace(/\s+/g, "");
+            const original = l.dataset.name || "";
+            const name = original.toLowerCase();
+            const words = name.split(/\s+/);
 
-            const match = !term || name.includes(term);
+            const match = tokens.every(t => {
+                if(/^\d+$/.test(t)){
+                    return words.includes(t);
+                }
+                return words.some(w => w.startsWith(t));
+            });
 
-            // 🔥 FIX: hide BOTH lesson + its details
-            const details = l.nextElementSibling;
+            if(match){
 
-            if (match) {
+                const det = l.nextElementSibling;
+
+                // show lesson
                 l.classList.remove("hidden");
-                if (details) details.classList.remove("hidden");
+                if(det) det.classList.remove("hidden");
 
-                // auto expand
-                if (term) {
-                    let el = l.parentElement;
-                    while (el) {
-                        if (el.classList.contains("content")) {
+                // highlight
+                let highlighted = original;
+                tokens.forEach(t=>{
+                    const regex = new RegExp(`\\b(${t})\\b`, "gi");
+                    highlighted = highlighted.replace(regex,
+                        `<span class="highlight">$1</span>`);
+                });
+                l.innerHTML = highlighted;
+
+                // 🔥 SHOW FULL PATH ONLY
+                let el = l;
+
+                while(el){
+                    if(el.classList.contains("content") ||
+                        el.classList.contains("sub-card") ||
+                        el.classList.contains("card")){
+
+                        el.classList.remove("hidden");
+
+                        // expand
+                        if(el.classList.contains("content")){
                             el.style.display = "block";
                         }
-                        el = el.parentElement;
                     }
+                    el = el.parentElement;
                 }
-
-            } else {
-                l.classList.add("hidden");
-                if (details) details.classList.add("hidden");
             }
         });
 
+        // ✅ Reset if empty search
+        if(!raw){
+            document.querySelectorAll(".lesson, .sub-card, .card, .content")
+                .forEach(el=>{
+                    el.classList.remove("hidden");
+                    if(el.classList.contains("content")){
+                        el.style.display = "none";
+                    }
+                });
+        }
+
+        
+
+        // ✅ HIDE EMPTY GROUPS
+        document.querySelectorAll(".content").forEach(c=>{
+            const visible = c.querySelector(".lesson:not(.hidden)");
+            c.style.display = visible ? "block" : "none";
+        });
     }
 
     /* ---------- LOAD ---------- */
     async function load(){
 
-        try {
+        const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-            if (!window.supabase) throw new Error("Supabase not loaded");
+        const [l1,l2,l3,l4,l5]=await Promise.all([
+            supabase.from("levels").select("*"),
+            supabase.from("sections").select("*"),
+            supabase.from("topics").select("*"),
+            supabase.from("lessons").select("*"),
+            supabase.from("lesson_content").select("*")
+        ]);
 
-            console.log("Using URL:", SUPABASE_URL);
+        appData={
+            levels:l1.data||[],
+            sections:l2.data||[],
+            topics:l3.data||[],
+            lessons:l4.data||[]
+        };
 
-            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        lessonContent=l5.data||[];
 
-            const [l1,l2,l3,l4,l5] = await Promise.all([
-                supabase.from("levels").select("*"),
-                supabase.from("sections").select("*"),
-                supabase.from("topics").select("*"),
-                supabase.from("lessons").select("*"),
-                supabase.from("lesson_content").select("*")
-            ]);
-
-            if (l1.error || l2.error || l3.error || l4.error || l5.error) {
-                console.error(l1,l2,l3,l4,l5);
-                throw new Error("Database fetch failed");
-            }
-
-            appData={
-                levels:l1.data,
-                sections:l2.data,
-                topics:l3.data,
-                lessons:l4.data
-            };
-
-            lessonContent=l5.data;
-
-            buildTree();
-
-        } catch(err){
-
-            console.error(err);
-
-            document.getElementById("app").innerHTML = `
-      <div style="color:red;text-align:center;padding:20px">
-        Failed to load data<br><br>${err.message}
-      </div>
-    `;
-        }
+        buildTree();
     }
 
     /* ---------- INIT ---------- */
-    window.addEventListener("load", () => {
-
+    window.onload=()=>{
         load();
+        document.getElementById("search").addEventListener("input",applySearch);
+        document.getElementById("knBtn").onclick=()=>{lang="kn";buildTree();};
+        document.getElementById("enBtn").onclick=()=>{lang="en";buildTree();};
+    };
 
-        document.getElementById("search").addEventListener("input", applySearch);
-
-        document.getElementById("knBtn").onclick=()=>{lang="kn"; buildTree();};
-        document.getElementById("enBtn").onclick=()=>{lang="en"; buildTree();};
-
-    });
 </script>
 
 </body>

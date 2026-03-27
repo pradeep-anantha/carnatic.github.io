@@ -10,7 +10,7 @@
     <style>
         body{
             margin:0;
-            font-family:"Noto Sans","Noto Sans Kannada",sans-serif;
+            font-family:"Noto Sans Kannada","Noto Sans",sans-serif;
             background:#0f172a;
             color:#e2e8f0;
         }
@@ -24,7 +24,6 @@
         }
 
         .title{font-size:18px;font-weight:600;}
-
         .controls{display:flex;gap:8px;}
 
         .search{
@@ -43,7 +42,11 @@
             cursor:pointer;
         }
 
-        .container{max-width:950px;margin:auto;padding:16px;}
+        .container{
+            max-width:1000px;
+            margin:auto;
+            padding:16px;
+        }
 
         .card,.sub-card{
             background:#1e293b;
@@ -61,15 +64,49 @@
             margin:6px 0;
             background:#475569;
             border-radius:8px;
+            text-align:left;
         }
 
-        .hidden{display:none !important;}
+        .hidden{display:none!important;}
 
         .highlight{
             background:yellow;
             color:black;
             padding:2px 4px;
             border-radius:4px;
+        }
+
+        /* ===== NOTATION ===== */
+
+        .card{
+            text-align:center;
+            font-size:22px;
+            line-height:2;
+            letter-spacing:1.5px;
+            word-spacing:6px;
+            font-weight:500;
+        }
+
+        /* comma spacing = swara width */
+        .comma{
+            display:inline-flex;
+            justify-content:center;
+            align-items:center;
+            width:28px;
+        }
+
+        /* subscripts inline safe */
+        sub{
+            font-size:12px;
+            vertical-align:sub;
+        }
+
+        /* responsive */
+        @media (max-width:768px){
+            .card{
+                font-size:18px;
+                letter-spacing:1px;
+            }
         }
     </style>
 </head>
@@ -97,22 +134,12 @@
 
     let appData, lessonContent, lang="kn";
 
-    /* ---------- NAME ---------- */
+    /* NAME */
     function getName(o){
         return lang==="kn" ? (o.name_kn||o.name||"") : (o.name_en||o.name||"");
     }
 
-    /* ---------- FUZZY MATCH ---------- */
-    function fuzzyMatch(text, search){
-        let ti=0, si=0;
-        while(ti<text.length && si<search.length){
-            if(text[ti]===search[si]) si++;
-            ti++;
-        }
-        return si===search.length;
-    }
-
-    /* ---------- SORT ---------- */
+    /* SORT */
     function lessonSort(a,b){
         const getNum=(name,fallback)=>{
             const m=(name||"").match(/\d+/);
@@ -122,7 +149,7 @@
             - getNum(b.name_en,b.display_order??b.id);
     }
 
-    /* ---------- BUILD TREE ---------- */
+    /* BUILD TREE */
     function buildTree(){
 
         const app=document.getElementById("app");
@@ -161,11 +188,51 @@
 
                                     l.onclick=()=>{
                                         det.innerHTML="";
+
                                         lessonContent
                                             .filter(c=>+c.lesson_id===+lesson.id)
                                             .forEach(r=>{
+
+                                                let raw = r.content_en || "";
+                                                let formatted = raw;
+
+                                                /* 🔥 DOT ABOVE (FINAL LOCKED FIX) */
+                                                formatted = formatted.replace(/([SRGMPDN])['’]/g, function(_, sw){
+                                                    return sw + "\u0307";
+                                                });
+
+                                                /* Kannada mapping */
+                                                if(lang==="kn"){
+                                                    formatted = formatted.replace(/([SRGMPDN])(\d*)/g, (m, sw, num)=>{
+                                                        const map = {
+                                                            S:"ಸ",
+                                                            R:"ರಿ",
+                                                            G:"ಗ",
+                                                            M:"ಮ",
+                                                            P:"ಪ",
+                                                            D:"ದ",
+                                                            N:"ನಿ"
+                                                        };
+                                                        return (map[sw] || sw) + (num || "");
+                                                    });
+                                                }
+
+                                                /* Subscript */
+                                                formatted = formatted.replace(/([^\s|,]+?)(\d+)/g,
+                                                    (m, sw, num) => sw + "<sub>" + num + "</sub>"
+                                                );
+
+                                                /* Comma */
+                                                formatted = formatted.replace(/,/g,
+                                                    '<span class="comma"><span>,</span></span>');
+
+                                                /* Tala */
+                                                formatted = formatted.replace(/\|\|/g, "##DOUBLEBAR##");
+                                                formatted = formatted.replace(/\|/g, "  |  ");
+                                                formatted = formatted.replace(/##DOUBLEBAR##/g, "||");
+
                                                 const line=create("card");
-                                                line.innerText=r.content_en||"";
+                                                line.innerHTML = formatted;
                                                 det.appendChild(line);
                                             });
                                     };
@@ -187,7 +254,7 @@
         });
     }
 
-    /* ---------- HELPERS ---------- */
+    /* helpers */
     function create(cls,text=""){
         const d=document.createElement("div");
         d.className=cls;
@@ -203,15 +270,13 @@
         };
     }
 
-    /* ---------- SEARCH ---------- */
+    /* SEARCH */
     function applySearch(){
-
         const raw = document.getElementById("search").value.toLowerCase().trim();
         const tokens = raw.split(/\s+/).filter(Boolean);
 
         const lessons = document.querySelectorAll(".lesson");
 
-        // STEP 1: Hide everything initially
         document.querySelectorAll(".lesson, .sub-card, .card, .content")
             .forEach(el => el.classList.add("hidden"));
 
@@ -222,32 +287,26 @@
             const words = name.split(/\s+/);
 
             const match = tokens.every(t => {
-                if(/^\d+$/.test(t)){
-                    return words.includes(t);
-                }
+                if(/^\d+$/.test(t)) return words.includes(t);
                 return words.some(w => w.startsWith(t));
             });
 
             if(match){
-
                 const det = l.nextElementSibling;
 
-                // show lesson
                 l.classList.remove("hidden");
                 if(det) det.classList.remove("hidden");
 
-                // highlight
                 let highlighted = original;
                 tokens.forEach(t=>{
                     const regex = new RegExp(`\\b(${t})\\b`, "gi");
                     highlighted = highlighted.replace(regex,
                         `<span class="highlight">$1</span>`);
                 });
+
                 l.innerHTML = highlighted;
 
-                // 🔥 SHOW FULL PATH ONLY
                 let el = l;
-
                 while(el){
                     if(el.classList.contains("content") ||
                         el.classList.contains("sub-card") ||
@@ -255,7 +314,6 @@
 
                         el.classList.remove("hidden");
 
-                        // expand
                         if(el.classList.contains("content")){
                             el.style.display = "block";
                         }
@@ -265,7 +323,6 @@
             }
         });
 
-        // ✅ Reset if empty search
         if(!raw){
             document.querySelectorAll(".lesson, .sub-card, .card, .content")
                 .forEach(el=>{
@@ -275,17 +332,9 @@
                     }
                 });
         }
-
-        
-
-        // ✅ HIDE EMPTY GROUPS
-        document.querySelectorAll(".content").forEach(c=>{
-            const visible = c.querySelector(".lesson:not(.hidden)");
-            c.style.display = visible ? "block" : "none";
-        });
     }
 
-    /* ---------- LOAD ---------- */
+    /* LOAD */
     async function load(){
 
         const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -310,7 +359,7 @@
         buildTree();
     }
 
-    /* ---------- INIT ---------- */
+    /* INIT */
     window.onload=()=>{
         load();
         document.getElementById("search").addEventListener("input",applySearch);

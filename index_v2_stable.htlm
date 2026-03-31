@@ -1,0 +1,484 @@
+<!-- SAME HEADER (UNCHANGED) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Carnatic Learning</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans&family=Noto+Sans+Kannada&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body{
+            margin:0;
+            font-family:"Noto Sans Kannada","Noto Sans",sans-serif;
+            background:#020617;
+            color:#e2e8f0;
+        }
+
+        .wrapper{display:flex;height:100vh;}
+
+        .sidebar{
+            width:300px;
+            overflow:auto;
+            padding:12px;
+            border-right:1px solid #1e293b;
+        }
+
+        .content{
+            flex:1;
+            padding:20px;
+            overflow:auto;
+        }
+
+        .hidden{display:none}
+
+        .level,.section,.topic{
+            cursor:pointer;
+            margin-top:8px;
+            font-weight:600;
+        }
+        .section{margin-left:10px}
+        .topic{margin-left:20px}
+
+        .lesson{
+            margin-left:30px;
+            padding:6px;
+            border-radius:6px;
+            cursor:pointer;
+        }
+
+        .lesson:hover{background:#1e293b}
+        .active{background:#6366f1}
+
+        .search{
+            width:100%;
+            padding:10px;
+            border-radius:10px;
+            border:none;
+            margin-bottom:12px;
+            background:#1e293b;
+            color:white;
+        }
+
+        .line{
+            display:grid;
+            grid-auto-flow:column;
+            grid-auto-columns:42px;
+            justify-content:center;
+            gap:6px;
+            margin:10px 0;
+        }
+
+        .swara{
+            width:42px;
+            height:42px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:#1e293b;
+            border-radius:8px;
+            font-size:16px;
+            line-height:1;
+        }
+
+        .note{
+            display:inline-flex;
+            align-items:flex-end;
+            gap:1px;
+        }
+
+        .note sub{
+            font-size:10px;
+            line-height:1;
+        }
+
+        .tala{background:#6366f1}
+
+        button{
+            margin:5px 2px;
+            padding:6px 10px;
+            border:none;
+            border-radius:6px;
+            background:#334155;
+            color:white;
+            cursor:pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+    <div class="sidebar">
+        <input id="search" class="search" placeholder="Search...">
+
+        <div>
+            <button onclick="setLang('en')">EN</button>
+            <button onclick="setLang('kn')">KN</button>
+        </div>
+
+        <div id="toc"></div>
+        <div id="searchResults" class="hidden"></div>
+    </div>
+
+    <div class="content">
+        <div id="viewer">Select a lesson</div>
+    </div>
+
+</div>
+
+<script>
+
+    const SUPABASE_URL="https://jlnyecsqjdphgsaabyja.supabase.co";
+    const SUPABASE_KEY="sb_publishable_z9hMCoKuhSaVC8EmPxj8Pg_nc6coxZk";
+
+    let appData={}, lessonContent=[], lang="en";
+
+    function getName(o){
+        return lang === "en" ? (o.name_en || "") : (o.name_kn || "");
+    }
+
+    /* 🔥 FIXED FORMAT SWARA */
+    function formatSwara(text){
+
+        if(!text) return "";
+
+        text = text.replace(/([SRGMPDN])['’]/g,(m,s)=>s+"\u0307");
+
+        if(lang==="kn"){
+            const map={S:"ಸ",R:"ರಿ",G:"ಗ",M:"ಮ",P:"ಪ",D:"ದ",N:"ನಿ"};
+            text=text.replace(/[SRGMPDN]/g,m=>map[m]);
+        }
+
+        return text.split(/\s+/).map(t=>{
+
+            if(t==="|"||t==="||"){
+                return `<span class="swara tala">${t}</span>`;
+            }
+
+            // 🔥 UPDATED REGEX (supports unicode subscripts)
+            const m = t.match(/^([\u0C80-\u0CFFA-Za-z]+)(\d+)$/);
+
+            if(m){
+
+                let base = m[1];
+
+                // 🔥 convert unicode subscripts → normal digits
+                const subMap = {
+                    "₀":"0","₁":"1","₂":"2","₃":"3","₄":"4",
+                    "₅":"5","₆":"6","₇":"7","₈":"8","₉":"9"
+                };
+
+                let sub = m[2].replace(/[₀-₉]/g, d => subMap[d] || d);
+
+                return `<span class="swara">
+                <span class="note">${base}<sub>${sub}</sub></span>
+            </span>`;
+            }
+
+            return `<span class="swara">${t}</span>`;
+        }).join("");
+    }
+
+    function showLesson(lesson){
+
+        const viewer=document.getElementById("viewer");
+
+        // 🔥 HEADER (NEW)
+        // 🔥 HEADER (FIXED WITH FALLBACK)
+        const title = lang === "en" ? lesson.name_en : lesson.name_kn;
+
+        const subtitle = lang === "en"
+            ? (lesson.title_en || lesson.name_en)
+            : (lesson.title_kn || lesson.name_kn);
+
+        const sahitya = lang === "en"
+            ? (lesson.content_en || "")
+            : (lesson.content_kn || "");
+
+        viewer.innerHTML = `
+    <h2>${title}</h2>
+`;
+
+        // ============================================
+// 🚀 NEW: STRUCTURE JSON SUPPORT
+// ============================================
+
+        let structure = lesson.structure;
+
+// parse if needed
+        if(typeof structure === "string"){
+            try {
+                structure = JSON.parse(structure);
+            } catch(e){
+                console.error("Invalid structure JSON", e);
+                structure = null;
+            }
+        }
+
+        if(structure && structure.sections){
+
+            // 🎵 METADATA
+            const meta = document.createElement("div");
+            meta.style.textAlign = "center";
+            meta.style.marginBottom = "15px";
+            meta.style.fontSize = "14px";
+            meta.style.color = "#94a3b8";
+
+            meta.innerText =
+                `Raga: ${lesson.raga || ""}
+Arohana: ${lesson.arohana || ""}
+Avarohana: ${lesson.avarohana || ""}
+Tala: ${lesson.tala || ""}
+Composer: ${lesson.composer || ""}`;
+
+            viewer.appendChild(meta);
+
+            structure.sections.forEach(section=>{
+
+                // SECTION TITLE
+                const sec = document.createElement("div");
+                sec.style.textAlign = "center";
+                sec.style.fontWeight = "bold";
+                sec.style.marginTop = "30px";
+                sec.style.marginBottom = "14px";
+                sec.style.fontSize = "14px";
+                sec.style.letterSpacing = "2px";
+                sec.style.color = "#94a3b8";
+                sec.innerText = section.name.toUpperCase();
+
+                viewer.appendChild(sec);
+
+                section.lines.forEach(line=>{
+
+                    // SAHITYA
+                    // SWARA FIRST
+                    if(line.swara){
+                        const sw=document.createElement("div");
+                        sw.className="line";
+                        sw.innerHTML = formatSwara(line.swara);
+                        viewer.appendChild(sw);
+                    }
+
+// SAHITYA BELOW (ALIGNED STYLE)
+                    if(line.sahitya){
+                        const txt=document.createElement("div");
+
+                        txt.style.textAlign="center";
+                        txt.style.fontWeight = "500";
+                        txt.style.color = "#cbd5f5";
+                        txt.style.letterSpacing = "0.5px";
+                        txt.style.marginTop="-6px";   // 🔥 pulls closer to swara
+                        txt.style.marginBottom="10px";
+                        txt.style.letterSpacing="1px";
+
+                        txt.innerText = lang === "en"
+                            ? line.sahitya.en
+                            : line.sahitya.kn;
+
+                        viewer.appendChild(txt);
+                    }
+
+                    // SWARA
+                    if(line.swara){
+                        const sw=document.createElement("div");
+                        sw.className="line";
+                        sw.innerHTML = formatSwara(line.swara);
+                        viewer.appendChild(sw);
+                    }
+
+                });
+            });
+
+            return; // 🔥 IMPORTANT (skip old sahitya block)
+        }
+
+        // 🔥 SAHITYA BLOCK (NEW)
+        if(sahitya){
+            const container = document.createElement("div");
+            container.style.textAlign = "center";
+            container.style.marginBottom = "20px";
+
+            sahitya.split("\n").forEach((lineText, index)=>{
+
+                if(!lineText.trim()) return;
+
+                const line=document.createElement("div");
+
+                if(index === 0){
+                    // 🎯 Title
+                    line.style.fontSize = "22px";
+                    line.style.fontWeight = "bold";
+                    line.style.marginBottom = "12px";
+                }else{
+                    line.style.fontSize = "18px";
+                    line.style.margin = "4px 0";
+                }
+
+                line.innerText = lineText;
+                container.appendChild(line);
+            });
+
+            viewer.appendChild(container);
+        }
+
+        // 🔥 EXISTING SWARA RENDER (UNCHANGED)
+        lessonContent
+            .filter(c=>c.lesson_id==lesson.id)
+            .forEach(r=>{
+                const line=document.createElement("div");
+                line.className="line";
+                line.innerHTML=formatSwara(r.content_en);
+                viewer.appendChild(line);
+            });
+    }
+
+    function toggle(el){
+        const next = el.nextElementSibling;
+        if(next) next.classList.toggle("hidden");
+    }
+
+    function buildTOC(){
+
+        const toc=document.getElementById("toc");
+        toc.innerHTML="";
+
+        appData.levels.forEach(level=>{
+
+            const l=document.createElement("div");
+            l.className="level";
+            l.innerText=getName(level);
+            toc.appendChild(l);
+
+            const secWrap=document.createElement("div");
+            secWrap.className="hidden";
+            toc.appendChild(secWrap);
+
+            l.onclick=()=>toggle(l);
+
+            appData.sections.filter(s=>s.level_id==level.id)
+                .forEach(section=>{
+
+                    const s=document.createElement("div");
+                    s.className="section";
+                    s.innerText=getName(section);
+                    secWrap.appendChild(s);
+
+                    const topWrap=document.createElement("div");
+                    topWrap.className="hidden";
+                    secWrap.appendChild(topWrap);
+
+                    s.onclick=()=>toggle(s);
+
+                    appData.topics.filter(t=>t.section_id==section.id)
+                        .forEach(topic=>{
+
+                            const t=document.createElement("div");
+                            t.className="topic";
+                            t.innerText=getName(topic);
+                            topWrap.appendChild(t);
+
+                            const lessonWrap=document.createElement("div");
+                            lessonWrap.className="hidden";
+                            topWrap.appendChild(lessonWrap);
+
+                            t.onclick=()=>toggle(t);
+
+                            appData.lessons
+                                .filter(l=>l.topic_id==topic.id)
+                                .sort((a,b)=>(a.display_order||0)-(b.display_order||0))
+                                .forEach(lesson=>{
+
+                                    const item=document.createElement("div");
+                                    item.className="lesson";
+                                    item.innerText=getName(lesson);
+
+                                    item.onclick=()=>{
+                                        document.querySelectorAll(".lesson").forEach(x=>x.classList.remove("active"));
+                                        item.classList.add("active");
+                                        showLesson(lesson);
+                                    };
+
+                                    lessonWrap.appendChild(item);
+                                });
+                        });
+                });
+        });
+    }
+
+    function applySearch(){
+
+        const q=document.getElementById("search").value.toLowerCase();
+        const toc=document.getElementById("toc");
+        const results=document.getElementById("searchResults");
+
+        if(!q){
+            toc.classList.remove("hidden");
+            results.classList.add("hidden");
+            return;
+        }
+
+        toc.classList.add("hidden");
+        results.classList.remove("hidden");
+        results.innerHTML="";
+
+        appData.lessons.forEach(lesson=>{
+            const name=getName(lesson);
+            if(name.toLowerCase().includes(q)){
+                const div=document.createElement("div");
+                div.className="lesson";
+                div.innerText=name;
+
+                div.onclick=()=>showLesson(lesson);
+
+                results.appendChild(div);
+            }
+        });
+    }
+
+    async function load(){
+
+        const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+        const [l1,l2,l3,l4,l5]=await Promise.all([
+            supabase.from("levels").select("*"),
+            supabase.from("sections").select("*"),
+            supabase.from("topics").select("*"),
+            supabase.from("lessons").select("*"),
+            supabase.from("lesson_content").select("*")
+        ]);
+
+        appData={
+            levels:l1.data||[],
+            sections:l2.data||[],
+            topics:l3.data||[],
+            lessons:l4.data||[]
+        };
+
+        lessonContent=l5.data||[];
+
+        buildTOC();
+    }
+
+    function setLang(l){
+
+        lang = l;
+
+        document.getElementById("toc").innerHTML="";
+        document.getElementById("searchResults").innerHTML="";
+        document.getElementById("viewer").innerHTML="Select a lesson";
+
+        buildTOC();
+    }
+
+    window.onload=()=>{
+        load();
+        document.getElementById("search").addEventListener("input",applySearch);
+    };
+
+</script>
+
+</body>
+</html>
